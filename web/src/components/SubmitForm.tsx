@@ -154,7 +154,7 @@ export function SubmitForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form onSubmit={onSubmit} className="space-y-3 md:space-y-5">
       {/* Name field */}
       <div>
         <label
@@ -169,7 +169,7 @@ export function SubmitForm() {
           required
           disabled={disabled}
           placeholder="e.g., Picasso (aka Dave)"
-          className="mt-2 w-full rounded-lg border-2 border-[#1a1a1a] bg-white px-4 py-3 text-base outline-none transition-all focus:border-[#3b4cca] focus:ring-2 focus:ring-[#3b4cca]/20"
+          className="mt-1.5 w-full rounded-lg border-2 border-[#1a1a1a] bg-white px-4 py-2.5 text-base outline-none transition-all focus:border-[#3b4cca] focus:ring-2 focus:ring-[#3b4cca]/20 md:py-3"
           style={{ fontFamily: "Patrick Hand, cursive" }}
         />
       </div>
@@ -182,13 +182,13 @@ export function SubmitForm() {
         >
           Where should I stick it?
         </label>
-        <div className="relative mt-2">
+        <div className="relative mt-1.5">
           <select
             value={bodyArea}
             onChange={(e) => setBodyArea(e.target.value)}
             required
             disabled={disabled}
-            className="w-full appearance-none rounded-lg border-2 border-[#1a1a1a] bg-white px-4 py-3 pr-10 text-base outline-none transition-all focus:border-[#3b4cca] focus:ring-2 focus:ring-[#3b4cca]/20"
+            className="w-full appearance-none rounded-lg border-2 border-[#1a1a1a] bg-white px-4 py-2.5 pr-10 text-base outline-none transition-all focus:border-[#3b4cca] focus:ring-2 focus:ring-[#3b4cca]/20 md:py-3"
             style={{ fontFamily: "Patrick Hand, cursive" }}
           >
             {BODY_AREAS.map((area) => (
@@ -218,7 +218,7 @@ export function SubmitForm() {
       {/* File upload zone */}
       <div>
         <div
-          className={`upload-zone relative cursor-pointer p-6 text-center ${isDragOver ? "dragover" : ""}`}
+          className={`upload-zone relative cursor-pointer p-4 text-center md:p-6 ${isDragOver ? "dragover" : ""}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -321,7 +321,7 @@ export function SubmitForm() {
       <button
         type="submit"
         disabled={disabled}
-        className="ink-button w-full rounded-full px-8 py-4 text-xl font-black uppercase tracking-wide text-white"
+        className="ink-button w-full rounded-full px-6 py-3 text-lg font-black uppercase tracking-wide text-white md:px-8 md:py-4 md:text-xl"
         style={{ fontFamily: "Londrina Solid, cursive" }}
       >
         {state === "uploading" ? (

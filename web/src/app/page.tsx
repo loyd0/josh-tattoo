@@ -33,7 +33,7 @@ export default function Home() {
       </header>
 
       {/* Main content */}
-      <div className="mx-auto max-w-7xl px-4 py-2 md:px-8 md:py-12">
+      <div className="mx-auto max-w-7xl px-3 py-1 md:px-8 md:py-12">
         <div className="flex flex-col items-center lg:flex-row lg:items-start lg:justify-between lg:gap-12">
           
           {/* Hero content - Centered on mobile, left-aligned on desktop */}
@@ -69,12 +69,12 @@ export default function Home() {
             <div className="tape-polka-corner" />
 
             {/* Notebook with spiral binding on left */}
-            <div className="notebook-mobile relative overflow-visible rounded-lg bg-white p-5 pb-6 pl-6 shadow-lg md:p-8">
+            <div className="notebook-mobile relative overflow-visible rounded-lg bg-white p-4 pb-5 pl-5 shadow-lg md:p-8">
               {/* Left spiral binding */}
               <div className="notebook-spiral" />
               
               <h2
-                className="mb-4 text-xl font-black md:mb-6 md:text-3xl"
+                className="mb-3 text-xl font-black md:mb-6 md:text-3xl"
                 style={{ fontFamily: 'Londrina Solid, cursive' }}
               >
                 Drop Your Ink Genius Here.
