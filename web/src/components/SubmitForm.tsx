@@ -3,8 +3,8 @@
 import { upload } from "@vercel/blob/client";
 import { useMemo, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Turnstile } from "next-turnstile";
 
-import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { AllowedContentTypes, MAX_UPLOAD_BYTES } from "@/lib/validation";
 
 type UploadState = "idle" | "uploading" | "submitting" | "done";
@@ -37,6 +37,9 @@ export function SubmitForm() {
 
   const [honeypot, setHoneypot] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileStatus, setTurnstileStatus] = useState<
+    "success" | "error" | "expired" | "required"
+  >("required");
 
   const [state, setState] = useState<UploadState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -99,10 +102,13 @@ export function SubmitForm() {
       return;
     }
 
-    if (!turnstileToken) {
-      setError("Please complete the Turnstile check.");
+    if (turnstileStatus !== "success" || !turnstileToken || turnstileToken.trim() === "") {
+      setError("Please complete the security check.");
       return;
     }
+
+    // Store the token we're about to use
+    const tokenToUse = turnstileToken;
 
     try {
       setState("uploading");
@@ -110,7 +116,7 @@ export function SubmitForm() {
       const blob = await upload(file.name, file, {
         access: "public",
         handleUploadUrl: "/api/blob/token",
-        clientPayload: JSON.stringify({ turnstileToken }),
+        clientPayload: JSON.stringify({ turnstileToken: tokenToUse }),
       });
 
       setState("submitting");
@@ -130,7 +136,7 @@ export function SubmitForm() {
           },
           honeypot,
           startedAtMs,
-          turnstileToken,
+          turnstileToken: tokenToUse,
         }),
       });
 
@@ -141,6 +147,9 @@ export function SubmitForm() {
       if (!res.ok) {
         setError(json && "error" in json ? json.error : "Submission failed.");
         setState("idle");
+        // Reset turnstile state for retry
+        setTurnstileStatus("required");
+        setTurnstileToken("");
         return;
       }
 
@@ -148,8 +157,12 @@ export function SubmitForm() {
       router.push("/success");
     } catch (err) {
       console.error(err);
-      setError("Upload failed. Please try again.");
+      const errorMessage = err instanceof Error ? err.message : "Upload failed. Please try again.";
+      setError(errorMessage);
       setState("idle");
+      // Reset turnstile state for retry
+      setTurnstileStatus("required");
+      setTurnstileToken("");
     }
   }
 
@@ -306,7 +319,35 @@ export function SubmitForm() {
         />
       </label>
 
-      <TurnstileWidget siteKey={siteKey} onToken={setTurnstileToken} />
+      {siteKey ? (
+        <Turnstile
+          siteKey={siteKey}
+          options={{
+            theme: "auto",
+            size: "normal",
+          }}
+          onSuccess={(token) => {
+            setTurnstileToken(token);
+            setTurnstileStatus("success");
+            setError(null);
+          }}
+          onError={() => {
+            setTurnstileToken("");
+            setTurnstileStatus("error");
+            setError("Security check failed. Please refresh and try again.");
+          }}
+          onExpire={() => {
+            setTurnstileToken("");
+            setTurnstileStatus("expired");
+            setError("Security check expired. Please verify again.");
+          }}
+        />
+      ) : (
+        <div className="rounded-lg border-2 border-amber-400/40 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Turnstile is not configured. Set{" "}
+          <code className="font-mono">NEXT_PUBLIC_TURNSTILE_SITE_KEY</code>.
+        </div>
+      )}
 
       {error ? (
         <div

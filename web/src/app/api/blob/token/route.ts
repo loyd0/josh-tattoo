@@ -1,8 +1,9 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { validateTurnstileToken } from "next-turnstile";
+import { v4 as uuidv4 } from "uuid";
 
 import { enforceRateLimit } from "@/lib/rateLimit";
 import { getClientIpFromHeaders, hashIp } from "@/lib/ip";
-import { verifyTurnstileToken } from "@/lib/turnstile";
 import { AllowedContentTypes, MAX_UPLOAD_BYTES } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -36,12 +37,16 @@ export async function POST(request: Request) {
         throw new Error("Missing Turnstile token");
       }
 
-      const turnstile = await verifyTurnstileToken({
+      // Validate Turnstile token with idempotency key to prevent reuse
+      const validationResponse = await validateTurnstileToken({
         token: turnstileToken,
-        ip,
+        secretKey: process.env.TURNSTILE_SECRET_KEY!,
+        idempotencyKey: uuidv4(), // Prevents token reuse
       });
-      if (!turnstile.ok) {
-        throw new Error(turnstile.reason);
+
+      if (!validationResponse.success) {
+        const errorCodes = validationResponse["error-codes"]?.join(", ") || "unknown";
+        throw new Error(`Turnstile validation failed: ${errorCodes}`);
       }
 
       const windowSeconds = Number(process.env.RATE_LIMIT_WINDOW_SECONDS ?? "600");
