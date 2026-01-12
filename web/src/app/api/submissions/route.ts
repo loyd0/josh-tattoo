@@ -3,7 +3,6 @@ import { Resend } from "resend";
 import { getSql } from "@/lib/db";
 import { enforceRateLimit } from "@/lib/rateLimit";
 import { getClientIpFromHeaders, hashIp } from "@/lib/ip";
-import { verifyTurnstileToken } from "@/lib/turnstile";
 import { SubmissionRequestSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -75,11 +74,9 @@ export async function POST(request: Request) {
   const ip = getClientIpFromHeaders(request.headers);
   const ipHash = ip ? hashIp(ip, process.env.IP_HASH_SALT) : "unknown";
 
-  const turnstile = await verifyTurnstileToken({
-    token: data.turnstileToken,
-    ip,
-  });
-  if (!turnstile.ok) return jsonError(400, turnstile.reason);
+  // Note: Turnstile token was already verified during blob upload in /api/blob/token.
+  // We don't verify it again here because Turnstile tokens are single-use.
+  // If the blob upload succeeded, we can trust the turnstile was valid.
 
   const windowSeconds = Number(process.env.RATE_LIMIT_WINDOW_SECONDS ?? "600");
   const max = Number(process.env.RATE_LIMIT_MAX_SUBMISSIONS ?? "5");
