@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { headers } from "next/headers";
+import Image from "next/image";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth/next";
 
 import { getSql } from "@/lib/db";
 import { AdminNotesModal } from "@/components/AdminNotesModal";
+import { authOptions } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +26,17 @@ function readOptionalNullableString(
 }
 
 export default async function AdminSubmissionDetailPage(props: {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 }) {
-  const { id } = props.params;
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/admin/signin");
 
-  const role = (await headers()).get("x-admin-role") ?? "full";
+  // In newer Next versions, `params` may be a Promise.
+  const params = await Promise.resolve(props.params);
+  const id = readOptionalString(params, "id");
+  if (!id) notFound();
+
+  const role = session.user?.role ?? "full";
   const isLimited = role === "limited";
 
   const sql = getSql();
@@ -176,6 +184,33 @@ export default async function AdminSubmissionDetailPage(props: {
 
         <div className="mt-6 space-y-2">
           <AdminNotesModal submissionId={s.id} initialNotes={s.notes} />
+
+          {s.file_content_type.startsWith("image/") ? (
+            <div className="pt-2">
+              <div className="text-xs uppercase tracking-wide text-zinc-500">
+                Upload preview
+              </div>
+              <a
+                href={s.file_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 block overflow-hidden rounded-2xl border border-black/10 bg-zinc-50 dark:border-white/15 dark:bg-black/20"
+                title="Open full image in new tab"
+              >
+                <Image
+                  src={s.file_url}
+                  alt="Uploaded tattoo"
+                  width={1600}
+                  height={1600}
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  className="h-auto w-full"
+                />
+              </a>
+              <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                Click the image to open full size.
+              </div>
+            </div>
+          ) : null}
 
           <div className="pt-2">
             <a

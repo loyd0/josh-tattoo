@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth/next";
 
 import { getSql } from "@/lib/db";
+import { authOptions } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -25,20 +27,25 @@ type SubmissionLimited = SubmissionBase;
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: { page?: string; search?: string };
+  searchParams: Promise<{ page?: string; search?: string }>;
 }) {
-  const role = (await headers()).get("x-admin-role") ?? "full";
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/admin/signin");
+
+  const role = session.user?.role ?? "full";
   const isLimited = role === "limited";
 
   const sql = getSql();
   
+  const sp = await searchParams;
+
   // Pagination
-  const page = parseInt(searchParams.page || "1", 10);
+  const page = parseInt(sp.page || "1", 10);
   const perPage = 20;
   const offset = (page - 1) * perPage;
   
   // Search
-  const search = searchParams.search?.trim() || "";
+  const search = sp.search?.trim() || "";
   
   // Build query with search and pagination
   let rows: Array<SubmissionFull | SubmissionLimited>;

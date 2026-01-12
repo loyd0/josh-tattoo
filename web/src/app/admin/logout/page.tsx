@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 export default function AdminLogoutPage() {
   useEffect(() => {
-    // Use a real navigation (not fetch) so the browser's Basic Auth UI engages.
-    window.location.assign("/api/admin/logout");
+    void signOut({ callbackUrl: "/" });
   }, []);
 
   return (
@@ -15,8 +15,7 @@ export default function AdminLogoutPage() {
         Signing out…
       </h1>
       <p className="mt-2 text-sm text-zinc-700">
-        If you see a login prompt, press <span className="font-semibold">Cancel</span> to
-        complete sign out.
+        You should be redirected shortly.
       </p>
       <div className="mt-4">
         <Link
