@@ -1,0 +1,282 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Londrina Solid';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/londrinasolid/v17/flUhRq6sw40kQEJxWNgkLuudGfNeKBM.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Londrina Solid';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/londrinasolid/v17/flUjRq6sw40kQEJxWNgkLuudGfs9eBGfSA.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Patrick Hand';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/patrickhand/v23/LDI1apSQOAYtSuYWp8ZhfYeMWcjJ.woff2') format('woff2');
+}
+
+:root {
+  --background: #f5f0e6;
+  --foreground: #1a1a1a;
+  --paper-white: #fefefe;
+  --ink-blue: #3b4cca;
+  --highlight-yellow: #fff176;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Patrick Hand', cursive;
+}
+
+/* Papery texture background */
+.paper-bg {
+  background-color: #f5f0e6;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect fill='%23f5f0e6' width='100' height='100'/%3E%3Cg fill-opacity='0.03'%3E%3Ccircle fill='%23000000' cx='50' cy='50' r='1'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(135deg, #f5f0e6 0%, #efe9db 50%, #f5f0e6 100%);
+}
+
+/* Highlight marker effect */
+.highlight-yellow {
+  background: linear-gradient(180deg, transparent 40%, #fff176 40%, #fff176 90%, transparent 90%);
+  padding: 0 4px;
+}
+
+/* ================================
+   NOTEBOOK STYLES
+   ================================ */
+
+.notebook-mobile {
+  position: relative;
+  background: var(--paper-white);
+  border-radius: 8px;
+  box-shadow: 
+    2px 4px 20px rgba(0,0,0,0.12);
+  margin-left: 12px; /* Space for spiral */
+}
+
+/* Spiral binding - left side */
+.notebook-spiral {
+  position: absolute;
+  left: -12px;
+  top: 20px;
+  bottom: 20px;
+  width: 24px;
+  z-index: 10;
+}
+
+/* Individual spiral rings */
+.notebook-spiral::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: 
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 12px,
+      #555 12px,
+      #555 22px,
+      transparent 22px,
+      transparent 34px
+    );
+  border-radius: 12px;
+}
+
+/* Desktop: add left padding for spiral area */
+@media (min-width: 768px) {
+  .notebook-mobile {
+    margin-left: 0;
+    padding-left: 3.5rem !important;
+  }
+  
+  .notebook-spiral {
+    left: 12px;
+    top: 20px;
+    bottom: 20px;
+  }
+}
+
+/* ================================
+   DECORATIVE ELEMENTS
+   ================================ */
+
+/* Grid paper corner decoration */
+.grid-paper-corner {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 50px;
+  height: 45px;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      #ddd 8px,
+      #ddd 9px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 8px,
+      #ddd 8px,
+      #ddd 9px
+    ),
+    #f8f8f8;
+  transform: rotate(-5deg);
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.08);
+  z-index: 5;
+}
+
+/* Polka tape corner decoration */
+.tape-polka-corner {
+  position: absolute;
+  bottom: 30px;
+  right: -20px;
+  width: 90px;
+  height: 30px;
+  background: 
+    radial-gradient(circle, #c9956a 2px, transparent 2px);
+  background-size: 7px 7px;
+  background-color: #e8d4c0;
+  opacity: 0.85;
+  transform: rotate(-12deg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  z-index: 5;
+}
+
+/* Bottom tape decorations */
+.tape-bottom-left {
+  position: absolute;
+  bottom: 60px;
+  left: -15px;
+  width: 70px;
+  height: 28px;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 6px,
+      rgba(200,180,160,0.25) 6px,
+      rgba(200,180,160,0.25) 8px
+    ),
+    #f0e6d8;
+  transform: rotate(-20deg);
+  opacity: 0.9;
+  z-index: 1;
+}
+
+.tape-bottom-right {
+  position: absolute;
+  bottom: 20px;
+  right: -10px;
+  width: 80px;
+  height: 30px;
+  background: 
+    radial-gradient(circle, #c9956a 2px, transparent 2px);
+  background-size: 7px 7px;
+  background-color: #e8d4c0;
+  transform: rotate(15deg);
+  opacity: 0.8;
+  z-index: 1;
+}
+
+/* Hide bottom tapes on desktop */
+@media (min-width: 768px) {
+  .tape-bottom-left,
+  .tape-bottom-right {
+    display: none;
+  }
+}
+
+/* ================================
+   FORM ELEMENTS
+   ================================ */
+
+/* Dashed upload area */
+.upload-zone {
+  border: 2.5px dashed #333;
+  border-radius: 10px;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+  border-color: var(--ink-blue);
+  background: rgba(59, 76, 202, 0.05);
+}
+
+/* Button ink effect */
+.ink-button {
+  background: linear-gradient(180deg, #4a5cd9 0%, #3b4cca 50%, #2d3db8 100%);
+  box-shadow: 
+    0 4px 0 #1a2a80,
+    0 6px 12px rgba(59, 76, 202, 0.4);
+  transition: all 0.1s ease;
+}
+
+.ink-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 5px 0 #1a2a80,
+    0 8px 16px rgba(59, 76, 202, 0.5);
+}
+
+.ink-button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 
+    0 2px 0 #1a2a80,
+    0 3px 8px rgba(59, 76, 202, 0.4);
+}
+
+.ink-button:disabled {
+  opacity: 0.7;
+}
+
+/* ================================
+   PHOTO EFFECTS
+   ================================ */
+
+.photo-cutout {
+  filter: drop-shadow(2px 3px 6px rgba(0,0,0,0.25));
+}
+
+/* Desktop grid paper and polka tape */
+@media (min-width: 768px) {
+  .grid-paper-corner {
+    top: -12px;
+    right: -12px;
+    left: auto;
+    width: 60px;
+    height: 50px;
+    transform: rotate(5deg);
+  }
+  
+  .tape-polka-corner {
+    bottom: 40px;
+    right: -30px;
+    width: 100px;
+    height: 32px;
+    transform: rotate(-8deg);
+  }
+}

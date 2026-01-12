@@ -1,0 +1,131 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { getSql } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminSubmissionDetailPage(props: {
+  params: { id: string };
+}) {
+  const { id } = props.params;
+
+  const sql = getSql();
+  const rows = (await sql`
+    select
+      id,
+      created_at,
+      name,
+      body_area,
+      notes,
+      file_url,
+      file_path,
+      file_size_bytes,
+      file_content_type,
+      status
+    from submissions
+    where id = ${id}
+    limit 1
+  `) as unknown as Array<{
+    id: string;
+    created_at: string;
+    name: string;
+    body_area: string;
+    notes: string | null;
+    file_url: string;
+    file_path: string;
+    file_size_bytes: number;
+    file_content_type: string;
+    status: string;
+  }>;
+
+  const s = rows[0];
+  if (!s) notFound();
+
+  return (
+    <main className="mx-auto w-full max-w-3xl px-4 py-10">
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Submission detail
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            {new Date(s.created_at).toLocaleString()}
+          </p>
+        </div>
+        <Link
+          href="/admin"
+          className="text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+        >
+          Back to list
+        </Link>
+      </div>
+
+      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/15 dark:bg-zinc-950">
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Name
+            </dt>
+            <dd className="mt-1 text-sm">{s.name}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Body area
+            </dt>
+            <dd className="mt-1 text-sm">{s.body_area}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Status
+            </dt>
+            <dd className="mt-1 text-sm">{s.status}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Content type
+            </dt>
+            <dd className="mt-1 text-sm">{s.file_content_type}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Size
+            </dt>
+            <dd className="mt-1 text-sm">
+              {(s.file_size_bytes / 1024 / 1024).toFixed(2)} MB
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Blob path
+            </dt>
+            <dd className="mt-1 break-all text-sm font-mono">{s.file_path}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-6 space-y-2">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-zinc-500">
+              Notes
+            </div>
+            <div className="mt-1 whitespace-pre-wrap text-sm text-zinc-800 dark:text-zinc-200">
+              {s.notes ?? "(none)"}
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <a
+              href={s.file_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white dark:bg-white dark:text-black"
+            >
+              Open uploaded file
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
