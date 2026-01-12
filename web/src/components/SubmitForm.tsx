@@ -31,6 +31,7 @@ export function SubmitForm() {
   const startedAtMs = useMemo(() => Date.now(), []);
 
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [bodyArea, setBodyArea] = useState(BODY_AREAS[0]);
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -113,7 +114,13 @@ export function SubmitForm() {
     try {
       setState("uploading");
 
-      const blob = await upload(file.name, file, {
+      // Add timestamp to filename to ensure uniqueness
+      const timestamp = Date.now();
+      const fileExt = file.name.substring(file.name.lastIndexOf('.'));
+      const fileName = file.name.substring(0, file.name.lastIndexOf('.'));
+      const uniqueFileName = `${fileName}-${timestamp}${fileExt}`;
+
+      const blob = await upload(uniqueFileName, file, {
         access: "public",
         handleUploadUrl: "/api/blob/token",
         clientPayload: JSON.stringify({ turnstileToken: tokenToUse }),
@@ -126,6 +133,7 @@ export function SubmitForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          email,
           bodyArea,
           notes: "", // Notes removed from this design
           blob: {
@@ -182,6 +190,26 @@ export function SubmitForm() {
           required
           disabled={disabled}
           placeholder="e.g., Picasso (aka Dave)"
+          className="mt-1.5 w-full rounded-lg border-2 border-[#1a1a1a] bg-white px-4 py-2.5 text-base outline-none transition-all focus:border-[#3b4cca] focus:ring-2 focus:ring-[#3b4cca]/20 md:py-3"
+          style={{ fontFamily: "Patrick Hand, cursive" }}
+        />
+      </div>
+
+      {/* Email field */}
+      <div>
+        <label
+          className="block text-base font-semibold text-[#333]"
+          style={{ fontFamily: "Patrick Hand, cursive" }}
+        >
+          Your email (so we can contact you)
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={disabled}
+          placeholder="e.g., dave@example.com"
           className="mt-1.5 w-full rounded-lg border-2 border-[#1a1a1a] bg-white px-4 py-2.5 text-base outline-none transition-all focus:border-[#3b4cca] focus:ring-2 focus:ring-[#3b4cca]/20 md:py-3"
           style={{ fontFamily: "Patrick Hand, cursive" }}
         />

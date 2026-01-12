@@ -16,6 +16,7 @@ export default async function AdminSubmissionDetailPage(props: {
       id,
       created_at,
       name,
+      email,
       body_area,
       notes,
       file_url,
@@ -30,6 +31,7 @@ export default async function AdminSubmissionDetailPage(props: {
     id: string;
     created_at: string;
     name: string;
+    email: string | null;
     body_area: string;
     notes: string | null;
     file_url: string;
@@ -67,39 +69,45 @@ export default async function AdminSubmissionDetailPage(props: {
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Name
             </dt>
-            <dd className="mt-1 text-sm">{s.name}</dd>
+            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.name}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Email
+            </dt>
+            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.email || "-"}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Body area
             </dt>
-            <dd className="mt-1 text-sm">{s.body_area}</dd>
+            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.body_area}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Status
             </dt>
-            <dd className="mt-1 text-sm">{s.status}</dd>
+            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.status}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Content type
             </dt>
-            <dd className="mt-1 text-sm">{s.file_content_type}</dd>
+            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.file_content_type}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Size
             </dt>
-            <dd className="mt-1 text-sm">
+            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
               {(s.file_size_bytes / 1024 / 1024).toFixed(2)} MB
             </dd>
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Blob path
             </dt>
-            <dd className="mt-1 break-all text-sm font-mono">{s.file_path}</dd>
+            <dd className="mt-1 break-all text-sm font-mono text-zinc-900 dark:text-zinc-100">{s.file_path}</dd>
           </div>
         </dl>
 

@@ -22,6 +22,7 @@ async function maybeSendNotificationEmail(opts: {
   from: string;
   submissionId: string;
   name: string;
+  email: string;
   bodyArea: string;
   notes?: string | null;
   fileUrl: string;
@@ -39,6 +40,7 @@ async function maybeSendNotificationEmail(opts: {
       `New tattoo submission received.`,
       ``,
       `Name: ${opts.name}`,
+      `Email: ${opts.email}`,
       `Body area: ${opts.bodyArea}`,
       opts.notes ? `Notes: ${opts.notes}` : `Notes: (none)`,
       ``,
@@ -104,6 +106,7 @@ export async function POST(request: Request) {
   const rows = (await sql`
     insert into submissions (
       name,
+      email,
       body_area,
       notes,
       file_url,
@@ -115,6 +118,7 @@ export async function POST(request: Request) {
     )
     values (
       ${data.name},
+      ${data.email},
       ${data.bodyArea},
       ${notes},
       ${data.blob.url},
@@ -144,6 +148,7 @@ export async function POST(request: Request) {
         from: notifyFrom,
         submissionId,
         name: data.name,
+        email: data.email,
         bodyArea: data.bodyArea,
         notes,
         fileUrl: data.blob.url,

@@ -27,13 +27,19 @@ function unauthorized() {
 export function middleware(req: NextRequest) {
   const adminUser = process.env.ADMIN_USER;
   const adminPass = process.env.ADMIN_PASS;
+  const limitedUser = process.env.ADMIN_LIMITED_USER;
+  const limitedPass = process.env.ADMIN_LIMITED_PASS;
 
-  if (!adminUser || !adminPass) {
+  const hasFull = Boolean(adminUser && adminPass);
+  const hasLimited = Boolean(limitedUser && limitedPass);
+
+  if (!hasFull && !hasLimited) {
     // Allow in dev if not configured; require in production.
     if (process.env.NODE_ENV !== "production") return NextResponse.next();
-    return new NextResponse("ADMIN_USER/ADMIN_PASS not configured", {
-      status: 500,
-    });
+    return new NextResponse(
+      "No admin credentials configured (set ADMIN_USER/ADMIN_PASS and/or ADMIN_LIMITED_USER/ADMIN_LIMITED_PASS)",
+      { status: 500 },
+    );
   }
 
   const auth = req.headers.get("authorization");
@@ -50,11 +56,30 @@ export function middleware(req: NextRequest) {
   const [u, p] = decoded.split(":");
   if (!u || !p) return unauthorized();
 
-  if (!constantTimeEqual(u, adminUser) || !constantTimeEqual(p, adminPass)) {
-    return unauthorized();
+  let role: "full" | "limited" | null = null;
+  if (hasFull && adminUser && adminPass) {
+    if (constantTimeEqual(u, adminUser) && constantTimeEqual(p, adminPass)) {
+      role = "full";
+    }
   }
+  if (!role && hasLimited && limitedUser && limitedPass) {
+    if (
+      constantTimeEqual(u, limitedUser) &&
+      constantTimeEqual(p, limitedPass)
+    ) {
+      role = "limited";
+    }
+  }
+  if (!role) return unauthorized();
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-admin-role", role);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  }
 }
 
 export const config = {
