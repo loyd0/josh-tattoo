@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       });
 
       if (!validationResponse.success) {
-        const errorCodes = validationResponse["error-codes"]?.join(", ") || "unknown";
+        const errorCodes = validationResponse.error_codes?.join(", ") || "unknown";
         throw new Error(`Turnstile validation failed: ${errorCodes}`);
       }
 

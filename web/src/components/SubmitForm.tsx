@@ -322,11 +322,7 @@ export function SubmitForm() {
       {siteKey ? (
         <Turnstile
           siteKey={siteKey}
-          options={{
-            theme: "auto",
-            size: "normal",
-          }}
-          onSuccess={(token) => {
+          onVerify={(token) => {
             setTurnstileToken(token);
             setTurnstileStatus("success");
             setError(null);
