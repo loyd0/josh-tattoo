@@ -30,14 +30,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Desktop only nav link */}
-        <a
-          href="#ideas"
-          className="hidden items-center gap-1 text-lg transition-opacity hover:opacity-70 md:flex"
-          style={{ fontFamily: 'Patrick Hand, cursive' }}
-        >
-          See Current Ideas <span className="text-xl">↓</span>
-        </a>
       </header>
 
       {/* Main content */}
@@ -61,7 +53,7 @@ export default function Home() {
               className="mt-3 max-w-sm px-2 text-[1.05rem] leading-relaxed text-[#333] md:mt-6 md:max-w-md md:px-0 md:text-xl lg:max-w-none lg:text-2xl"
               style={{ fontFamily: 'Patrick Hand, cursive' }}
             >
-              Alright team, my skin is blank and my brain is empty. I need your best, weirdest, or coolest tattoo concepts. Sketch it on a napkin, find a Pinterest pic, or design a masterpiece. You submit, I might commit.
+              Hello. Before I&apos;m 30, I need to get a tattoo — and I can&apos;t decide what it should be. So I&apos;m crowdsourcing some designs from you lot. I&apos;ll keep it anonymous to avoid any bias, pick my top three, and then (probably) put it to a public vote.
             </p>
 
             {/* Josh photo - overlaps the notebook on mobile */}
@@ -77,7 +69,7 @@ export default function Home() {
             <div className="tape-polka-corner" />
 
             {/* Notebook with spiral binding on left */}
-            <div className="notebook-mobile relative overflow-visible rounded-lg bg-white p-5 pb-6 shadow-lg md:p-8">
+            <div className="notebook-mobile relative overflow-visible rounded-lg bg-white p-5 pb-6 pl-6 shadow-lg md:p-8">
               {/* Left spiral binding */}
               <div className="notebook-spiral" />
               
