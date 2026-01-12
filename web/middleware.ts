@@ -79,7 +79,7 @@ export function middleware(req: NextRequest) {
     request: {
       headers: requestHeaders,
     },
-  }
+  });
 }
 
 export const config = {

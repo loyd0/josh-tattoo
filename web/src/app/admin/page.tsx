@@ -1,26 +1,35 @@
 import Link from "next/link";
 import Image from "next/image";
+import { headers } from "next/headers";
 
 import { getSql } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-type Submission = {
+type SubmissionBase = {
   id: string;
   created_at: string;
-  name: string;
-  email: string | null;
   body_area: string;
   status: string;
   file_url: string;
   file_content_type: string;
 };
 
+type SubmissionFull = SubmissionBase & {
+  name: string;
+  email: string | null;
+};
+
+type SubmissionLimited = SubmissionBase;
+
 export default async function AdminPage({
   searchParams,
 }: {
   searchParams: { page?: string; search?: string };
 }) {
+  const role = (await headers()).get("x-admin-role") ?? "full";
+  const isLimited = role === "limited";
+
   const sql = getSql();
   
   // Pagination
@@ -32,42 +41,71 @@ export default async function AdminPage({
   const search = searchParams.search?.trim() || "";
   
   // Build query with search and pagination
-  let rows: Submission[];
+  let rows: Array<SubmissionFull | SubmissionLimited>;
   let totalCount: number;
   
   if (search) {
     const searchPattern = `%${search}%`;
-    rows = (await sql`
-      select id, created_at, name, email, body_area, status, file_url, file_content_type
-      from submissions
-      where 
-        name ilike ${searchPattern}
-        or email ilike ${searchPattern}
-        or body_area ilike ${searchPattern}
-        or status ilike ${searchPattern}
-      order by created_at desc
-      limit ${perPage}
-      offset ${offset}
-    `) as unknown as Submission[];
+    if (isLimited) {
+      rows = (await sql`
+        select id, created_at, body_area, status, file_url, file_content_type
+        from submissions
+        where
+          body_area ilike ${searchPattern}
+          or status ilike ${searchPattern}
+        order by created_at desc
+        limit ${perPage}
+        offset ${offset}
+      `) as unknown as SubmissionLimited[];
+    } else {
+      rows = (await sql`
+        select id, created_at, name, email, body_area, status, file_url, file_content_type
+        from submissions
+        where 
+          name ilike ${searchPattern}
+          or email ilike ${searchPattern}
+          or body_area ilike ${searchPattern}
+          or status ilike ${searchPattern}
+        order by created_at desc
+        limit ${perPage}
+        offset ${offset}
+      `) as unknown as SubmissionFull[];
+    }
     
-    const countResult = (await sql`
-      select count(*) as count
-      from submissions
-      where 
-        name ilike ${searchPattern}
-        or email ilike ${searchPattern}
-        or body_area ilike ${searchPattern}
-        or status ilike ${searchPattern}
-    `) as unknown as Array<{ count: string }>;
+    const countResult = isLimited
+      ? ((await sql`
+          select count(*) as count
+          from submissions
+          where
+            body_area ilike ${searchPattern}
+            or status ilike ${searchPattern}
+        `) as unknown as Array<{ count: string }>)
+      : ((await sql`
+          select count(*) as count
+          from submissions
+          where 
+            name ilike ${searchPattern}
+            or email ilike ${searchPattern}
+            or body_area ilike ${searchPattern}
+            or status ilike ${searchPattern}
+        `) as unknown as Array<{ count: string }>);
     totalCount = parseInt(countResult[0]?.count || "0", 10);
   } else {
-    rows = (await sql`
-      select id, created_at, name, email, body_area, status, file_url, file_content_type
-      from submissions
-      order by created_at desc
-      limit ${perPage}
-      offset ${offset}
-    `) as unknown as Submission[];
+    rows = isLimited
+      ? ((await sql`
+          select id, created_at, body_area, status, file_url, file_content_type
+          from submissions
+          order by created_at desc
+          limit ${perPage}
+          offset ${offset}
+        `) as unknown as SubmissionLimited[])
+      : ((await sql`
+          select id, created_at, name, email, body_area, status, file_url, file_content_type
+          from submissions
+          order by created_at desc
+          limit ${perPage}
+          offset ${offset}
+        `) as unknown as SubmissionFull[]);
     
     const countResult = (await sql`
       select count(*) as count
@@ -82,19 +120,27 @@ export default async function AdminPage({
     <main className="mx-auto w-full max-w-7xl px-4 py-10">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-800">
             Admin
           </h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             {totalCount} total submission{totalCount !== 1 ? "s" : ""}.
           </p>
         </div>
-        <Link
-          href="/"
-          className="text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
-        >
-          Public form
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className="rounded-xl border-2 border-[#1a1a1a] bg-white px-4 py-2 text-base font-semibold text-[#1a1a1a] hover:bg-[#fff176]"
+          >
+            Public form
+          </Link>
+          <Link
+            href="/admin/logout"
+            className="rounded-xl border-2 border-[#1a1a1a] bg-white px-4 py-2 text-base font-semibold text-[#1a1a1a] hover:bg-[#fff176]"
+          >
+            Sign out
+          </Link>
+        </div>
       </div>
 
       {/* Search bar */}
@@ -104,7 +150,11 @@ export default async function AdminPage({
             type="search"
             name="search"
             defaultValue={search}
-            placeholder="Search by name, email, body area, or status..."
+            placeholder={
+              isLimited
+                ? "Search by body area or status..."
+                : "Search by name, email, body area, or status..."
+            }
             className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800"
           />
           <button
@@ -130,8 +180,8 @@ export default async function AdminPage({
             <tr>
               <th className="px-4 py-3">Preview</th>
               <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Email</th>
+              {isLimited ? null : <th className="px-4 py-3">Name</th>}
+              {isLimited ? null : <th className="px-4 py-3">Email</th>}
               <th className="px-4 py-3">Body area</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">File</th>
@@ -142,7 +192,7 @@ export default async function AdminPage({
               <tr>
                 <td
                   className="px-4 py-6 text-zinc-600 dark:text-zinc-400"
-                  colSpan={7}
+                  colSpan={isLimited ? 5 : 7}
                 >
                   {search ? "No submissions found." : "No submissions yet."}
                 </td>
@@ -163,7 +213,11 @@ export default async function AdminPage({
                       >
                         <Image
                           src={r.file_url}
-                          alt={`${r.name}'s tattoo`}
+                          alt={
+                            !isLimited && "name" in r
+                              ? `${r.name}'s tattoo`
+                              : "Tattoo submission"
+                          }
                           width={48}
                           height={48}
                           className="h-full w-full object-cover"
@@ -196,17 +250,21 @@ export default async function AdminPage({
                       minute: "2-digit",
                     })}
                   </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/${r.id}`}
-                      className="font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
-                    >
-                      {r.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {r.email || "-"}
-                  </td>
+                  {isLimited ? null : (
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/admin/${r.id}`}
+                        className="font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+                      >
+                        {"name" in r ? r.name : ""}
+                      </Link>
+                    </td>
+                  )}
+                  {isLimited ? null : (
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {"email" in r ? r.email || "-" : "-"}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
                     {r.body_area}
                   </td>
@@ -222,6 +280,16 @@ export default async function AdminPage({
                     >
                       Open
                     </a>
+                    {isLimited ? (
+                      <div className="mt-1">
+                        <Link
+                          href={`/admin/${r.id}`}
+                          className="text-zinc-700 underline underline-offset-4 dark:text-zinc-300"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    ) : null}
                   </td>
                 </tr>
               ))

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 
 import { getSql } from "@/lib/db";
 
@@ -10,36 +11,65 @@ export default async function AdminSubmissionDetailPage(props: {
 }) {
   const { id } = props.params;
 
+  const role = (await headers()).get("x-admin-role") ?? "full";
+  const isLimited = role === "limited";
+
   const sql = getSql();
-  const rows = (await sql`
-    select
-      id,
-      created_at,
-      name,
-      email,
-      body_area,
-      notes,
-      file_url,
-      file_path,
-      file_size_bytes,
-      file_content_type,
-      status
-    from submissions
-    where id = ${id}
-    limit 1
-  `) as unknown as Array<{
-    id: string;
-    created_at: string;
-    name: string;
-    email: string | null;
-    body_area: string;
-    notes: string | null;
-    file_url: string;
-    file_path: string;
-    file_size_bytes: number;
-    file_content_type: string;
-    status: string;
-  }>;
+  const rows = isLimited
+    ? ((await sql`
+        select
+          id,
+          created_at,
+          body_area,
+          notes,
+          file_url,
+          file_path,
+          file_size_bytes,
+          file_content_type,
+          status
+        from submissions
+        where id = ${id}
+        limit 1
+      `) as unknown as Array<{
+        id: string;
+        created_at: string;
+        body_area: string;
+        notes: string | null;
+        file_url: string;
+        file_path: string;
+        file_size_bytes: number;
+        file_content_type: string;
+        status: string;
+      }>)
+    : ((await sql`
+        select
+          id,
+          created_at,
+          name,
+          email,
+          body_area,
+          notes,
+          file_url,
+          file_path,
+          file_size_bytes,
+          file_content_type,
+          status
+        from submissions
+        where id = ${id}
+        limit 1
+      `) as unknown as Array<{
+        id: string;
+        created_at: string;
+        name: string;
+        email: string | null;
+        body_area: string;
+        notes: string | null;
+        file_url: string;
+        file_path: string;
+        file_size_bytes: number;
+        file_content_type: string;
+        status: string;
+      }>);
 
   const s = rows[0];
   if (!s) notFound();
@@ -55,28 +85,44 @@ export default async function AdminSubmissionDetailPage(props: {
             {new Date(s.created_at).toLocaleString()}
           </p>
         </div>
-        <Link
-          href="/admin"
-          className="text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
-        >
-          Back to list
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/admin"
+            className="rounded-xl border-2 border-[#1a1a1a] bg-white px-4 py-2 text-base font-semibold text-[#1a1a1a] hover:bg-[#fff176]"
+          >
+            Back to list
+          </Link>
+          <Link
+            href="/admin/logout"
+            className="rounded-xl border-2 border-[#1a1a1a] bg-white px-4 py-2 text-base font-semibold text-[#1a1a1a] hover:bg-[#fff176]"
+          >
+            Sign out
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/15 dark:bg-zinc-950">
         <dl className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500">
-              Name
-            </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.name}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500">
-              Email
-            </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.email || "-"}</dd>
-          </div>
+          {isLimited ? null : (
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-zinc-500">
+                Name
+              </dt>
+              <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                {"name" in s ? s.name : ""}
+              </dd>
+            </div>
+          )}
+          {isLimited ? null : (
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-zinc-500">
+                Email
+              </dt>
+              <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                {"email" in s ? s.email || "-" : "-"}
+              </dd>
+            </div>
+          )}
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Body area
