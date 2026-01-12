@@ -39,7 +39,11 @@ export function AdminNotesModal({ submissionId, initialNotes }: Props) {
         setError(msg);
         return;
       }
-      const nextNotes = data.ok ? data.notes : null;
+      if (!("ok" in data) || !data.ok) {
+        setError("Failed to save notes");
+        return;
+      }
+      const nextNotes = data.notes;
       setNotes(nextNotes ?? "");
       setIsOpen(false);
     } catch {

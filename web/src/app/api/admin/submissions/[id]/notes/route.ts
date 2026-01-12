@@ -23,10 +23,11 @@ const BodySchema = z.object({
 
 export async function PATCH(
   request: Request,
-  ctx: { params: { id: string } },
+  ctx: { params: Promise<{ id: string }> },
 ) {
   // Protected by `middleware.ts` via `/api/admin/:path*` matcher.
-  const parsedParams = ParamsSchema.safeParse(ctx.params);
+  const params = await ctx.params;
+  const parsedParams = ParamsSchema.safeParse(params);
   if (!parsedParams.success) return jsonError(400, "Invalid submission id");
 
   const json = await request.json().catch(() => null);

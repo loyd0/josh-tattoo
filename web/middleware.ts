@@ -6,6 +6,11 @@ export default withAuth(
     return NextResponse.next();
   },
   {
+    // Keep middleware token encryption/decryption aligned with the NextAuth handler.
+    // If this differs, you'll see `JWT_SESSION_ERROR` / `JWEDecryptionFailed`.
+    secret:
+      process.env.NEXTAUTH_SECRET ??
+      (process.env.NODE_ENV !== "production" ? "dev-secret-change-me" : undefined),
     pages: {
       signIn: "/admin/signin",
     },

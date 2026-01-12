@@ -3,6 +3,23 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 export type AdminRole = "full" | "limited";
 
+/**
+ * NextAuth uses this secret to encrypt/decrypt the JWT session cookie.
+ *
+ * If it changes (or is missing and implicitly generated), any existing session
+ * cookies become undecryptable and NextAuth will log `JWT_SESSION_ERROR` with
+ * `JWEDecryptionFailed` (often showing up as redirect loops to /admin/signin).
+ */
+const NEXTAUTH_SECRET =
+  process.env.NEXTAUTH_SECRET ??
+  (process.env.NODE_ENV !== "production" ? "dev-secret-change-me" : undefined);
+
+if (!NEXTAUTH_SECRET) {
+  throw new Error(
+    "Missing NEXTAUTH_SECRET. Set it to a long random string to enable stable admin sessions.",
+  );
+}
+
 function constantTimeEqual(a: string, b: string) {
   const enc = new TextEncoder();
   const aBuf = enc.encode(a);
@@ -22,7 +39,7 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
 
   // Required in production; also used by middleware to validate tokens.
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: NEXTAUTH_SECRET,
 
   providers: [
     CredentialsProvider({
