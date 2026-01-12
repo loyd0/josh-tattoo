@@ -15,16 +15,21 @@ function constantTimeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-function unauthorized() {
+function unauthorized(realm: string) {
   return new NextResponse("Unauthorized", {
     status: 401,
     headers: {
-      "WWW-Authenticate": 'Basic realm="Admin"',
+      "WWW-Authenticate": `Basic realm="${realm}"`,
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      Pragma: "no-cache",
     },
   });
 }
 
 export function middleware(req: NextRequest) {
+  const realmId = req.cookies.get("admin_realm")?.value ?? "v1";
+  const realm = `Admin-${realmId}`;
+
   const adminUser = process.env.ADMIN_USER;
   const adminPass = process.env.ADMIN_PASS;
   const limitedUser = process.env.ADMIN_LIMITED_USER;
@@ -42,19 +47,34 @@ export function middleware(req: NextRequest) {
     );
   }
 
+  // Sign out: rotate realm so browser must re-prompt next time.
+  if (req.nextUrl.pathname === "/api/admin/logout") {
+    const newRealmId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const res = unauthorized(`Admin-${newRealmId}`);
+    res.cookies.set("admin_realm", newRealmId, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+    return res;
+  }
+
   const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Basic ")) return unauthorized();
+  if (!auth?.startsWith("Basic ")) return unauthorized(realm);
 
   const base64 = auth.slice("Basic ".length);
   let decoded = "";
   try {
     decoded = Buffer.from(base64, "base64").toString("utf8");
   } catch {
-    return unauthorized();
+    return unauthorized(realm);
   }
 
   const [u, p] = decoded.split(":");
-  if (!u || !p) return unauthorized();
+  if (!u || !p) return unauthorized(realm);
 
   let role: "full" | "limited" | null = null;
   if (hasFull && adminUser && adminPass) {
@@ -70,16 +90,27 @@ export function middleware(req: NextRequest) {
       role = "limited";
     }
   }
-  if (!role) return unauthorized();
+  if (!role) return unauthorized(realm);
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-admin-role", role);
 
-  return NextResponse.next({
+  const res = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+
+  // Ensure realm cookie exists (so we can rotate on logout).
+  if (!req.cookies.get("admin_realm")) {
+    res.cookies.set("admin_realm", realmId, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+  }
+
+  return res;
 }
 
 export const config = {

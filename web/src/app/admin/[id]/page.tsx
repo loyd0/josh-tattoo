@@ -3,8 +3,25 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 
 import { getSql } from "@/lib/db";
+import { AdminNotesModal } from "@/components/AdminNotesModal";
 
 export const dynamic = "force-dynamic";
+
+function readOptionalString(obj: unknown, key: string): string | undefined {
+  if (typeof obj !== "object" || obj === null) return undefined;
+  const v = (obj as Record<string, unknown>)[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function readOptionalNullableString(
+  obj: unknown,
+  key: string,
+): string | null | undefined {
+  if (typeof obj !== "object" || obj === null) return undefined;
+  const v = (obj as Record<string, unknown>)[key];
+  if (v === null) return null;
+  return typeof v === "string" ? v : undefined;
+}
 
 export default async function AdminSubmissionDetailPage(props: {
   params: { id: string };
@@ -109,7 +126,7 @@ export default async function AdminSubmissionDetailPage(props: {
                 Name
               </dt>
               <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
-                {"name" in s ? s.name : ""}
+                {readOptionalString(s, "name") ?? ""}
               </dd>
             </div>
           )}
@@ -119,7 +136,7 @@ export default async function AdminSubmissionDetailPage(props: {
                 Email
               </dt>
               <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
-                {"email" in s ? s.email || "-" : "-"}
+                {readOptionalNullableString(s, "email") || "-"}
               </dd>
             </div>
           )}
@@ -158,14 +175,7 @@ export default async function AdminSubmissionDetailPage(props: {
         </dl>
 
         <div className="mt-6 space-y-2">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-zinc-500">
-              Notes
-            </div>
-            <div className="mt-1 whitespace-pre-wrap text-sm text-zinc-800 dark:text-zinc-200">
-              {s.notes ?? "(none)"}
-            </div>
-          </div>
+          <AdminNotesModal submissionId={s.id} initialNotes={s.notes} />
 
           <div className="pt-2">
             <a
