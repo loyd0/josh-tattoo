@@ -11,6 +11,22 @@ function jsonError(status: number, message: string) {
   return Response.json({ error: message }, { status });
 }
 
+// Resend requires `from` to be either:
+// - email@example.com
+// - Name <email@example.com>
+function isValidEmailAddress(addr: string) {
+  // This is intentionally conservative; the request payload already validates user emails via Zod.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr);
+}
+
+function isValidResendFrom(from: string) {
+  const trimmed = from.trim();
+  if (isValidEmailAddress(trimmed)) return true;
+  const m = trimmed.match(/^([^<>]+)<([^<>]+)>$/);
+  if (!m) return false;
+  return isValidEmailAddress(m[2].trim());
+}
+
 function escapeHtml(input: string) {
   return input
     .replaceAll("&", "&amp;")
@@ -39,6 +55,14 @@ async function maybeSendNotificationEmail(opts: {
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return;
+
+  if (!isValidResendFrom(opts.from)) {
+    throw new Error(
+      `Invalid NOTIFY_EMAIL_FROM value: ${JSON.stringify(
+        opts.from,
+      )}. Expected "email@example.com" or "Name <email@example.com>".`,
+    );
+  }
 
   const resend = new Resend(apiKey);
 
@@ -134,7 +158,8 @@ async function maybeSendNotificationEmail(opts: {
   const result = await resend.emails.send({
     to: opts.to,
     from: opts.from,
-    replyTo: opts.from,
+    // Let Josh reply directly to the submitter.
+    replyTo: opts.email,
     subject,
     text,
     html,
