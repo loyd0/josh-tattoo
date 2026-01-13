@@ -3,7 +3,7 @@ import { JoshPhoto } from "@/components/JoshPhoto";
 
 export default function Home() {
   return (
-    <main className="paper-bg relative min-h-dvh overflow-x-hidden">
+    <main className="relative min-h-dvh overflow-x-hidden">
       {/* Header - Centered on mobile, spaced on desktop */}
       <header className="flex items-center justify-center px-4 py-4 md:justify-between md:px-10 md:py-6">
         <div className="flex items-center gap-2">

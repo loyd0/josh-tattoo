@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { getSql } from "@/lib/db";
 import { AdminNotesModal } from "@/components/AdminNotesModal";
+import { AdminRatingStars } from "@/components/AdminRatingStars";
 import { authOptions } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,8 @@ export default async function AdminSubmissionDetailPage(props: {
           created_at,
           body_area,
           notes,
+          explanation,
+          rating,
           file_url,
           file_path,
           file_size_bytes,
@@ -60,6 +63,8 @@ export default async function AdminSubmissionDetailPage(props: {
         created_at: string;
         body_area: string;
         notes: string | null;
+        explanation: string | null;
+        rating: number | null;
         file_url: string;
         file_path: string;
         file_size_bytes: number;
@@ -74,6 +79,8 @@ export default async function AdminSubmissionDetailPage(props: {
           email,
           body_area,
           notes,
+          explanation,
+          rating,
           file_url,
           file_path,
           file_size_bytes,
@@ -89,6 +96,8 @@ export default async function AdminSubmissionDetailPage(props: {
         email: string | null;
         body_area: string;
         notes: string | null;
+        explanation: string | null;
+        rating: number | null;
         file_url: string;
         file_path: string;
         file_size_bytes: number;
@@ -106,7 +115,7 @@ export default async function AdminSubmissionDetailPage(props: {
           <h1 className="text-2xl font-semibold tracking-tight">
             Submission detail
           </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-zinc-600">
             {new Date(s.created_at).toLocaleString()}
           </p>
         </div>
@@ -126,14 +135,14 @@ export default async function AdminSubmissionDetailPage(props: {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/15 dark:bg-zinc-950">
+      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
         <dl className="grid gap-4 sm:grid-cols-2">
           {isLimited ? null : (
             <div>
               <dt className="text-xs uppercase tracking-wide text-zinc-500">
                 Name
               </dt>
-              <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+              <dd className="mt-1 text-sm text-zinc-900">
                 {readOptionalString(s, "name") ?? ""}
               </dd>
             </div>
@@ -143,7 +152,7 @@ export default async function AdminSubmissionDetailPage(props: {
               <dt className="text-xs uppercase tracking-wide text-zinc-500">
                 Email
               </dt>
-              <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+              <dd className="mt-1 text-sm text-zinc-900">
                 {readOptionalNullableString(s, "email") ? (
                   <a
                     href={`mailto:${readOptionalNullableString(s, "email")}`}
@@ -161,33 +170,54 @@ export default async function AdminSubmissionDetailPage(props: {
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Body area
             </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.body_area}</dd>
+            <dd className="mt-1 text-sm text-zinc-900">{s.body_area}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Status
             </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.status}</dd>
+            <dd className="mt-1 text-sm text-zinc-900">{s.status}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Rating
+            </dt>
+            <dd className="mt-1">
+              <AdminRatingStars
+                submissionId={s.id}
+                initialRating={"rating" in s ? s.rating : null}
+              />
+            </dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Content type
             </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">{s.file_content_type}</dd>
+            <dd className="mt-1 text-sm text-zinc-900">{s.file_content_type}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Size
             </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+            <dd className="mt-1 text-sm text-zinc-900">
               {(s.file_size_bytes / 1024 / 1024).toFixed(2)} MB
+            </dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-xs uppercase tracking-wide text-zinc-500">
+              Explanation
+            </dt>
+            <dd className="mt-1 whitespace-pre-wrap text-sm text-zinc-900">
+              {"explanation" in s && s.explanation && s.explanation.trim().length > 0
+                ? s.explanation
+                : "(none)"}
             </dd>
           </div>
           <div className="sm:col-span-2">
             <dt className="text-xs uppercase tracking-wide text-zinc-500">
               Blob path
             </dt>
-            <dd className="mt-1 break-all text-sm font-mono text-zinc-900 dark:text-zinc-100">{s.file_path}</dd>
+            <dd className="mt-1 break-all text-sm font-mono text-zinc-900">{s.file_path}</dd>
           </div>
         </dl>
 
@@ -203,7 +233,7 @@ export default async function AdminSubmissionDetailPage(props: {
                 href={s.file_url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 block overflow-hidden rounded-2xl border border-black/10 bg-zinc-50 dark:border-white/15 dark:bg-black/20"
+                className="mt-2 block overflow-hidden rounded-2xl border border-black/10 bg-zinc-50"
                 title="Open full image in new tab"
               >
                 <Image
@@ -215,7 +245,7 @@ export default async function AdminSubmissionDetailPage(props: {
                   className="h-auto w-full"
                 />
               </a>
-              <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <div className="mt-2 text-sm text-zinc-600">
                 Click the image to open full size.
               </div>
             </div>
@@ -226,7 +256,7 @@ export default async function AdminSubmissionDetailPage(props: {
               href={s.file_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white dark:bg-white dark:text-black"
+              className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white"
             >
               Open uploaded file
             </a>

@@ -33,6 +33,7 @@ export function SubmitForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [bodyArea, setBodyArea] = useState(BODY_AREAS[0]);
+  const [explanation, setExplanation] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -136,6 +137,7 @@ export function SubmitForm() {
           email,
           bodyArea,
           notes: "", // Notes removed from this design
+          explanation,
           blob: {
             url: blob.url,
             pathname: blob.pathname,
@@ -258,6 +260,26 @@ export function SubmitForm() {
             </svg>
           </div>
         </div>
+      </div>
+
+      {/* Explanation */}
+      <div>
+        <label
+          className="block text-base font-semibold text-[#333]"
+          style={{ fontFamily: "Patrick Hand, cursive" }}
+        >
+          Explain yourself (optional)
+        </label>
+        <textarea
+          name="explanation"
+          value={explanation}
+          onChange={(e) => setExplanation(e.target.value)}
+          disabled={disabled}
+          rows={5}
+          placeholder="Tell us the story, the vibe, the meaning, or why Josh should do this..."
+          className="mt-1.5 w-full resize-none rounded-lg border-2 border-[#1a1a1a] bg-white px-4 py-2.5 text-base outline-none transition-all focus:border-[#3b4cca] focus:ring-2 focus:ring-[#3b4cca]/20 md:py-3"
+          style={{ fontFamily: "Patrick Hand, cursive" }}
+        />
       </div>
 
       {/* File upload zone */}

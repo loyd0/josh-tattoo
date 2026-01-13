@@ -27,7 +27,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">
+      <body className="paper-bg min-h-dvh antialiased">
         {children}
         <Analytics />
       </body>

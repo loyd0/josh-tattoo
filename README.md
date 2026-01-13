@@ -23,6 +23,8 @@ Create `web/.env.local`:
 - **Admin auth (Basic Auth)**
   - `ADMIN_USER`
   - `ADMIN_PASS`
+  - `ADMIN_LIMITED_USER` (optional; can view admin but **name/email are hidden**)
+  - `ADMIN_LIMITED_PASS` (optional; can view admin but **name/email are hidden**)
 - **Resend**
   - `RESEND_API_KEY`
   - `NOTIFY_EMAIL_FROM`
@@ -45,6 +47,7 @@ Run these SQL files against your Neon database:
 
 - `migrations/001_create_submissions.sql`
 - `migrations/002_create_rate_limits.sql`
+- `migrations/003_add_email.sql`
 
 ## Vercel deployment notes
 

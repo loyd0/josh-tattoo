@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { getSql } from "@/lib/db";
 import { authOptions } from "@/auth";
+import { AdminRatingStars } from "@/components/AdminRatingStars";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ type SubmissionBase = {
   status: string;
   file_url: string;
   file_content_type: string;
+  rating: number | null;
 };
 
 type SubmissionFull = SubmissionBase & {
@@ -27,7 +29,7 @@ type SubmissionLimited = SubmissionBase;
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; search?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; rating?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/admin/signin");
@@ -46,16 +48,145 @@ export default async function AdminPage({
   
   // Search
   const search = sp.search?.trim() || "";
+
+  // Rating filter: "" (all), "unrated", or "1".."5"
+  const ratingParam = (sp.rating ?? "").trim();
+  const ratingExact =
+    ratingParam === "1" ||
+    ratingParam === "2" ||
+    ratingParam === "3" ||
+    ratingParam === "4" ||
+    ratingParam === "5"
+      ? (parseInt(ratingParam, 10) as 1 | 2 | 3 | 4 | 5)
+      : null;
+  const ratingIsUnrated = ratingParam === "unrated";
+  const hasRatingFilter = ratingIsUnrated || ratingExact !== null;
   
   // Build query with search and pagination
   let rows: Array<SubmissionFull | SubmissionLimited>;
   let totalCount: number;
   
-  if (search) {
+  if (search && hasRatingFilter) {
+    const searchPattern = `%${search}%`;
+    if (isLimited) {
+      if (ratingIsUnrated) {
+        rows = (await sql`
+          select id, created_at, body_area, status, file_url, file_content_type, rating
+          from submissions
+          where
+            (
+              body_area ilike ${searchPattern}
+              or status ilike ${searchPattern}
+            )
+            and rating is null
+          order by created_at desc
+          limit ${perPage}
+          offset ${offset}
+        `) as unknown as SubmissionLimited[];
+      } else {
+        rows = (await sql`
+          select id, created_at, body_area, status, file_url, file_content_type, rating
+          from submissions
+          where
+            (
+              body_area ilike ${searchPattern}
+              or status ilike ${searchPattern}
+            )
+            and rating = ${ratingExact}
+          order by created_at desc
+          limit ${perPage}
+          offset ${offset}
+        `) as unknown as SubmissionLimited[];
+      }
+    } else {
+      if (ratingIsUnrated) {
+        rows = (await sql`
+          select id, created_at, name, email, body_area, status, file_url, file_content_type, rating
+          from submissions
+          where 
+            (
+              name ilike ${searchPattern}
+              or email ilike ${searchPattern}
+              or body_area ilike ${searchPattern}
+              or status ilike ${searchPattern}
+            )
+            and rating is null
+          order by created_at desc
+          limit ${perPage}
+          offset ${offset}
+        `) as unknown as SubmissionFull[];
+      } else {
+        rows = (await sql`
+          select id, created_at, name, email, body_area, status, file_url, file_content_type, rating
+          from submissions
+          where 
+            (
+              name ilike ${searchPattern}
+              or email ilike ${searchPattern}
+              or body_area ilike ${searchPattern}
+              or status ilike ${searchPattern}
+            )
+            and rating = ${ratingExact}
+          order by created_at desc
+          limit ${perPage}
+          offset ${offset}
+        `) as unknown as SubmissionFull[];
+      }
+    }
+    
+    const countResult = isLimited
+      ? ratingIsUnrated
+        ? ((await sql`
+            select count(*) as count
+            from submissions
+            where
+              (
+                body_area ilike ${searchPattern}
+                or status ilike ${searchPattern}
+              )
+              and rating is null
+          `) as unknown as Array<{ count: string }>)
+        : ((await sql`
+            select count(*) as count
+            from submissions
+            where
+              (
+                body_area ilike ${searchPattern}
+                or status ilike ${searchPattern}
+              )
+              and rating = ${ratingExact}
+          `) as unknown as Array<{ count: string }>)
+      : ratingIsUnrated
+        ? ((await sql`
+            select count(*) as count
+            from submissions
+            where 
+              (
+                name ilike ${searchPattern}
+                or email ilike ${searchPattern}
+                or body_area ilike ${searchPattern}
+                or status ilike ${searchPattern}
+              )
+              and rating is null
+          `) as unknown as Array<{ count: string }>)
+        : ((await sql`
+            select count(*) as count
+            from submissions
+            where 
+              (
+                name ilike ${searchPattern}
+                or email ilike ${searchPattern}
+                or body_area ilike ${searchPattern}
+                or status ilike ${searchPattern}
+              )
+              and rating = ${ratingExact}
+          `) as unknown as Array<{ count: string }>);
+    totalCount = parseInt(countResult[0]?.count || "0", 10);
+  } else if (search) {
     const searchPattern = `%${search}%`;
     if (isLimited) {
       rows = (await sql`
-        select id, created_at, body_area, status, file_url, file_content_type
+        select id, created_at, body_area, status, file_url, file_content_type, rating
         from submissions
         where
           body_area ilike ${searchPattern}
@@ -66,7 +197,7 @@ export default async function AdminPage({
       `) as unknown as SubmissionLimited[];
     } else {
       rows = (await sql`
-        select id, created_at, name, email, body_area, status, file_url, file_content_type
+        select id, created_at, name, email, body_area, status, file_url, file_content_type, rating
         from submissions
         where 
           name ilike ${searchPattern}
@@ -97,17 +228,68 @@ export default async function AdminPage({
             or status ilike ${searchPattern}
         `) as unknown as Array<{ count: string }>);
     totalCount = parseInt(countResult[0]?.count || "0", 10);
+  } else if (hasRatingFilter) {
+    if (isLimited) {
+      rows = ratingIsUnrated
+        ? ((await sql`
+            select id, created_at, body_area, status, file_url, file_content_type, rating
+            from submissions
+            where rating is null
+            order by created_at desc
+            limit ${perPage}
+            offset ${offset}
+          `) as unknown as SubmissionLimited[])
+        : ((await sql`
+            select id, created_at, body_area, status, file_url, file_content_type, rating
+            from submissions
+            where rating = ${ratingExact}
+            order by created_at desc
+            limit ${perPage}
+            offset ${offset}
+          `) as unknown as SubmissionLimited[]);
+    } else {
+      rows = ratingIsUnrated
+        ? ((await sql`
+            select id, created_at, name, email, body_area, status, file_url, file_content_type, rating
+            from submissions
+            where rating is null
+            order by created_at desc
+            limit ${perPage}
+            offset ${offset}
+          `) as unknown as SubmissionFull[])
+        : ((await sql`
+            select id, created_at, name, email, body_area, status, file_url, file_content_type, rating
+            from submissions
+            where rating = ${ratingExact}
+            order by created_at desc
+            limit ${perPage}
+            offset ${offset}
+          `) as unknown as SubmissionFull[]);
+    }
+
+    const countResult = ratingIsUnrated
+      ? ((await sql`
+          select count(*) as count
+          from submissions
+          where rating is null
+        `) as unknown as Array<{ count: string }>)
+      : ((await sql`
+          select count(*) as count
+          from submissions
+          where rating = ${ratingExact}
+        `) as unknown as Array<{ count: string }>);
+    totalCount = parseInt(countResult[0]?.count || "0", 10);
   } else {
     rows = isLimited
       ? ((await sql`
-          select id, created_at, body_area, status, file_url, file_content_type
+          select id, created_at, body_area, status, file_url, file_content_type, rating
           from submissions
           order by created_at desc
           limit ${perPage}
           offset ${offset}
         `) as unknown as SubmissionLimited[])
       : ((await sql`
-          select id, created_at, name, email, body_area, status, file_url, file_content_type
+          select id, created_at, name, email, body_area, status, file_url, file_content_type, rating
           from submissions
           order by created_at desc
           limit ${perPage}
@@ -127,10 +309,10 @@ export default async function AdminPage({
     <main className="mx-auto w-full max-w-7xl px-4 py-10">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-800">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             Admin
           </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-zinc-600">
             {totalCount} total submission{totalCount !== 1 ? "s" : ""}.
           </p>
         </div>
@@ -162,18 +344,31 @@ export default async function AdminPage({
                 ? "Search by body area or status..."
                 : "Search by name, email, body area, or status..."
             }
-            className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800"
+            className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
           />
+          <select
+            name="rating"
+            defaultValue={ratingParam}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          >
+            <option value="">All ratings</option>
+            <option value="unrated">Unrated</option>
+            <option value="1">1 star</option>
+            <option value="2">2 stars</option>
+            <option value="3">3 stars</option>
+            <option value="4">4 stars</option>
+            <option value="5">5 stars</option>
+          </select>
           <button
             type="submit"
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
           >
             Search
           </button>
-          {search && (
+          {(search || ratingParam) && (
             <Link
               href="/admin"
-              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
             >
               Clear
             </Link>
@@ -181,9 +376,9 @@ export default async function AdminPage({
         </form>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-black/10 bg-white dark:border-white/15 dark:bg-zinc-950">
+      <div className="overflow-hidden rounded-2xl border border-black/10 bg-white">
         <table className="w-full border-collapse text-left text-sm">
-          <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600 dark:bg-black/40 dark:text-zinc-400">
+          <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600">
             <tr>
               <th className="px-4 py-3">Preview</th>
               <th className="px-4 py-3">Created</th>
@@ -191,6 +386,7 @@ export default async function AdminPage({
               {isLimited ? null : <th className="px-4 py-3">Email</th>}
               <th className="px-4 py-3">Body area</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Rating</th>
               <th className="px-4 py-3">File</th>
             </tr>
           </thead>
@@ -198,17 +394,17 @@ export default async function AdminPage({
             {rows.length === 0 ? (
               <tr>
                 <td
-                  className="px-4 py-6 text-zinc-600 dark:text-zinc-400"
-                  colSpan={isLimited ? 5 : 7}
+                  className="px-4 py-6 text-zinc-600"
+                  colSpan={isLimited ? 6 : 8}
                 >
-                  {search ? "No submissions found." : "No submissions yet."}
+                  {search || hasRatingFilter ? "No submissions found." : "No submissions yet."}
                 </td>
               </tr>
             ) : (
               rows.map((r) => (
                 <tr
                   key={r.id}
-                  className="border-t border-black/5 hover:bg-zinc-50/70 dark:border-white/10 dark:hover:bg-white/5"
+                  className="border-t border-black/5 hover:bg-zinc-50/70"
                 >
                   <td className="px-4 py-3">
                     {r.file_content_type.startsWith("image/") ? (
@@ -216,7 +412,7 @@ export default async function AdminPage({
                         href={r.file_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="block h-12 w-12 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700"
+                        className="block h-12 w-12 overflow-hidden rounded-lg border border-zinc-200"
                       >
                         <Image
                           src={r.file_url}
@@ -231,7 +427,7 @@ export default async function AdminPage({
                         />
                       </a>
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50">
                         <svg
                           className="h-6 w-6 text-zinc-400"
                           fill="none"
@@ -248,7 +444,7 @@ export default async function AdminPage({
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-zinc-700 dark:text-zinc-300">
+                  <td className="px-4 py-3 whitespace-nowrap text-zinc-700">
                     {new Date(r.created_at).toLocaleString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -261,18 +457,18 @@ export default async function AdminPage({
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/${r.id}`}
-                        className="font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+                        className="font-medium text-zinc-900 underline underline-offset-4"
                       >
                         {"name" in r ? r.name : ""}
                       </Link>
                     </td>
                   )}
                   {isLimited ? null : (
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                    <td className="px-4 py-3 text-zinc-700">
                       {"email" in r && r.email ? (
                         <a
                           href={`mailto:${r.email}`}
-                          className="break-all text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+                          className="break-all text-zinc-900 underline underline-offset-4"
                         >
                           {r.email}
                         </a>
@@ -281,16 +477,19 @@ export default async function AdminPage({
                       )}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                  <td className="px-4 py-3 text-zinc-700">
                     {r.body_area}
                   </td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                  <td className="px-4 py-3 text-zinc-700">
                     {r.status}
+                  </td>
+                  <td className="px-4 py-3">
+                    <AdminRatingStars submissionId={r.id} initialRating={r.rating} />
                   </td>
                   <td className="px-4 py-3">
                     <a
                       href={r.file_url}
-                      className="text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+                      className="text-zinc-900 underline underline-offset-4"
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -300,7 +499,7 @@ export default async function AdminPage({
                       <div className="mt-1">
                         <Link
                           href={`/admin/${r.id}`}
-                          className="text-zinc-700 underline underline-offset-4 dark:text-zinc-300"
+                          className="text-zinc-700 underline underline-offset-4"
                         >
                           View
                         </Link>
@@ -317,22 +516,22 @@ export default async function AdminPage({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="text-sm text-zinc-600">
             Page {page} of {totalPages}
           </div>
           <div className="flex gap-2">
             {page > 1 && (
               <Link
-                href={`/admin?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
-                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                href={`/admin?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}${ratingParam ? `&rating=${encodeURIComponent(ratingParam)}` : ""}`}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
               >
                 Previous
               </Link>
             )}
             {page < totalPages && (
               <Link
-                href={`/admin?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
-                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                href={`/admin?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}${ratingParam ? `&rating=${encodeURIComponent(ratingParam)}` : ""}`}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
               >
                 Next
               </Link>

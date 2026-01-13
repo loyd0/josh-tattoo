@@ -71,14 +71,14 @@ export function AdminNotesModal({ submissionId, initialNotes }: Props) {
           <div className="text-xs uppercase tracking-wide text-zinc-500">
             Notes
           </div>
-          <div className="mt-1 whitespace-pre-wrap text-sm text-zinc-800 dark:text-zinc-200">
+          <div className="mt-1 whitespace-pre-wrap text-sm text-zinc-800">
             {notesLabel}
           </div>
         </div>
         <button
           type="button"
           onClick={open}
-          className="shrink-0 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="shrink-0 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
         >
           Edit
         </button>
@@ -97,20 +97,20 @@ export function AdminNotesModal({ submissionId, initialNotes }: Props) {
             onClick={close}
           />
 
-          <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-white p-5 shadow-lg dark:border-white/15 dark:bg-zinc-950">
+          <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-white p-5 shadow-lg">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                <h2 className="text-base font-semibold text-zinc-900">
                   Edit notes
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="mt-1 text-sm text-zinc-600">
                   Add a short note for this submission.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={close}
-                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
               >
                 Close
               </button>
@@ -122,10 +122,10 @@ export function AdminNotesModal({ submissionId, initialNotes }: Props) {
                 onChange={(e) => setDraft(e.target.value)}
                 rows={6}
                 placeholder="(optional)"
-                className="w-full resize-none rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800"
+                className="w-full resize-none rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
               />
               {error ? (
-                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                <div className="mt-2 text-sm text-red-600">
                   {error}
                 </div>
               ) : null}
@@ -135,7 +135,7 @@ export function AdminNotesModal({ submissionId, initialNotes }: Props) {
               <button
                 type="button"
                 onClick={close}
-                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
                 disabled={isSaving}
               >
                 Cancel
@@ -143,7 +143,7 @@ export function AdminNotesModal({ submissionId, initialNotes }: Props) {
               <button
                 type="button"
                 onClick={save}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
                 disabled={isSaving}
               >
                 {isSaving ? "Saving..." : "Save"}

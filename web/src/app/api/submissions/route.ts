@@ -33,7 +33,7 @@ async function maybeSendNotificationEmail(opts: {
   name: string;
   email: string;
   bodyArea: string;
-  notes?: string | null;
+  explanation?: string | null;
   fileUrl: string;
   adminLink?: string;
 }) {
@@ -48,7 +48,7 @@ async function maybeSendNotificationEmail(opts: {
     `New tattoo submission received.`,
     ``,
     `Body area: ${opts.bodyArea}`,
-    opts.notes ? `Notes: ${opts.notes}` : `Notes: (none)`,
+    opts.explanation ? `Explanation: ${opts.explanation}` : `Explanation: (none)`,
     ``,
     `File: ${opts.fileUrl}`,
     opts.adminLink ? `Admin: ${opts.adminLink}` : null,
@@ -57,7 +57,7 @@ async function maybeSendNotificationEmail(opts: {
     .join("\n");
 
   const safeBodyArea = escapeHtml(opts.bodyArea);
-  const safeNotes = opts.notes ? escapeHtml(opts.notes) : "";
+  const safeExplanation = opts.explanation ? escapeHtml(opts.explanation) : "";
   const safeFileUrl = escapeHtml(opts.fileUrl);
   const safeAdminLink = opts.adminLink ? escapeHtml(opts.adminLink) : "";
   const safeSubmissionId = escapeHtml(opts.submissionId);
@@ -94,8 +94,8 @@ async function maybeSendNotificationEmail(opts: {
                   </tr>
                   <tr>
                     <td style="padding:10px 0;border-bottom:1px solid #f4f4f5;">
-                      <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Notes</div>
-                      <div style="margin-top:4px;font-size:16px;white-space:pre-wrap;">${safeNotes || "(none)"}</div>
+                      <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Explanation</div>
+                      <div style="margin-top:4px;font-size:16px;white-space:pre-wrap;">${safeExplanation || "(none)"}</div>
                     </td>
                   </tr>
                   <tr>
@@ -195,6 +195,7 @@ export async function POST(request: Request) {
   const sql = getSql();
 
   const notes = data.notes?.trim() ? data.notes.trim() : null;
+  const explanation = data.explanation?.trim() ? data.explanation.trim() : null;
   const userAgent = request.headers.get("user-agent");
 
   const rows = (await sql`
@@ -203,6 +204,7 @@ export async function POST(request: Request) {
       email,
       body_area,
       notes,
+      explanation,
       file_url,
       file_path,
       file_size_bytes,
@@ -215,6 +217,7 @@ export async function POST(request: Request) {
       ${data.email},
       ${data.bodyArea},
       ${notes},
+      ${explanation},
       ${data.blob.url},
       ${data.blob.pathname},
       ${data.blob.size},
@@ -244,7 +247,7 @@ export async function POST(request: Request) {
         name: data.name,
         email: data.email,
         bodyArea: data.bodyArea,
-        notes,
+        explanation,
         fileUrl: data.blob.url,
         adminLink,
       });

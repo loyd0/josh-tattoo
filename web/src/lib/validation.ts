@@ -21,6 +21,7 @@ export const SubmissionRequestSchema = z.object({
   email: z.string().email().max(200),
   bodyArea: z.string().trim().min(1).max(200),
   notes: z.string().trim().max(5000).optional().or(z.literal("")),
+  explanation: z.string().trim().max(5000).optional().or(z.literal("")),
 
   blob: SubmissionBlobSchema,
 
