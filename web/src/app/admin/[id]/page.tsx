@@ -144,7 +144,16 @@ export default async function AdminSubmissionDetailPage(props: {
                 Email
               </dt>
               <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
-                {readOptionalNullableString(s, "email") || "-"}
+                {readOptionalNullableString(s, "email") ? (
+                  <a
+                    href={`mailto:${readOptionalNullableString(s, "email")}`}
+                    className="break-all underline underline-offset-4"
+                  >
+                    {readOptionalNullableString(s, "email")}
+                  </a>
+                ) : (
+                  "-"
+                )}
               </dd>
             </div>
           )}

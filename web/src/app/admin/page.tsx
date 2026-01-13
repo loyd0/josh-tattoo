@@ -269,7 +269,16 @@ export default async function AdminPage({
                   )}
                   {isLimited ? null : (
                     <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {"email" in r ? r.email || "-" : "-"}
+                      {"email" in r && r.email ? (
+                        <a
+                          href={`mailto:${r.email}`}
+                          className="break-all text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+                        >
+                          {r.email}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
                     </td>
                   )}
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">

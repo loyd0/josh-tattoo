@@ -11,6 +11,15 @@ function jsonError(status: number, message: string) {
   return Response.json({ error: message }, { status });
 }
 
+function escapeHtml(input: string) {
+  return input
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function getOriginFromRequest(req: Request) {
   const proto = req.headers.get("x-forwarded-proto") ?? "http";
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
@@ -32,24 +41,109 @@ async function maybeSendNotificationEmail(opts: {
   if (!apiKey) return;
 
   const resend = new Resend(apiKey);
-  await resend.emails.send({
+
+  const subject = `New tattoo submission (${opts.bodyArea})`;
+
+  const text = [
+    `New tattoo submission received.`,
+    ``,
+    `Body area: ${opts.bodyArea}`,
+    opts.notes ? `Notes: ${opts.notes}` : `Notes: (none)`,
+    ``,
+    `File: ${opts.fileUrl}`,
+    opts.adminLink ? `Admin: ${opts.adminLink}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const safeBodyArea = escapeHtml(opts.bodyArea);
+  const safeNotes = opts.notes ? escapeHtml(opts.notes) : "";
+  const safeFileUrl = escapeHtml(opts.fileUrl);
+  const safeAdminLink = opts.adminLink ? escapeHtml(opts.adminLink) : "";
+  const safeSubmissionId = escapeHtml(opts.submissionId);
+
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(subject)}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f4f4f5;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+      New tattoo submission received.
+    </div>
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f4f4f5;padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="padding:18px 20px;background:#18181b;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                <div style="font-size:14px;letter-spacing:0.08em;text-transform:uppercase;opacity:0.9;">Ink My Canvas</div>
+                <div style="margin-top:6px;font-size:20px;font-weight:700;">New submission received</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#18181b;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse:collapse;">
+                  <tr>
+                    <td style="padding:10px 0;border-bottom:1px solid #f4f4f5;">
+                      <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Body area</div>
+                      <div style="margin-top:4px;font-size:16px;">${safeBodyArea}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:10px 0;border-bottom:1px solid #f4f4f5;">
+                      <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Notes</div>
+                      <div style="margin-top:4px;font-size:16px;white-space:pre-wrap;">${safeNotes || "(none)"}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:10px 0;">
+                      <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Links</div>
+                      <div style="margin-top:8px;font-size:14px;line-height:1.5;">
+                        <div>
+                          <a href="${safeFileUrl}" style="color:#2563eb;text-decoration:underline;">Open uploaded file</a>
+                        </div>
+                        ${
+                          safeAdminLink
+                            ? `<div style="margin-top:6px;"><a href="${safeAdminLink}" style="color:#2563eb;text-decoration:underline;">View in admin</a></div>`
+                            : ""
+                        }
+                      </div>
+                      <div style="margin-top:12px;font-size:12px;color:#71717a;">
+                        Submission ID: <span style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;">${safeSubmissionId}</span>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 20px;background:#fafafa;border-top:1px solid #f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#71717a;font-size:12px;">
+                Notification only.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const result = await resend.emails.send({
     to: opts.to,
     from: opts.from,
-    subject: `New tattoo submission: ${opts.name} (${opts.bodyArea})`,
-    text: [
-      `New tattoo submission received.`,
-      ``,
-      `Name: ${opts.name}`,
-      `Email: ${opts.email}`,
-      `Body area: ${opts.bodyArea}`,
-      opts.notes ? `Notes: ${opts.notes}` : `Notes: (none)`,
-      ``,
-      `File: ${opts.fileUrl}`,
-      opts.adminLink ? `Admin: ${opts.adminLink}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n"),
+    replyTo: opts.from,
+    subject,
+    text,
+    html,
+    tags: [{ name: "source", value: "tattoo-submission" }],
   });
+
+  if (result && "error" in result && result.error) {
+    throw result.error;
+  }
 }
 
 export async function POST(request: Request) {

@@ -185,6 +185,8 @@ export function SubmitForm() {
           Who&apos;s to blame for this idea?
         </label>
         <input
+          name="name"
+          autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -205,6 +207,8 @@ export function SubmitForm() {
         </label>
         <input
           type="email"
+          name="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
