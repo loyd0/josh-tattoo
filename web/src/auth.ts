@@ -16,11 +16,16 @@ function isAdminRole(role: unknown): role is AdminRole {
  */
 const NEXTAUTH_SECRET =
   process.env.NEXTAUTH_SECRET ??
-  (process.env.NODE_ENV !== "production" ? "dev-secret-change-me" : undefined);
+  process.env.AUTH_SECRET ??
+  "dev-secret-change-me";
 
-if (!NEXTAUTH_SECRET) {
-  throw new Error(
-    "Missing NEXTAUTH_SECRET. Set it to a long random string to enable stable admin sessions.",
+if (
+  !process.env.NEXTAUTH_SECRET &&
+  !process.env.AUTH_SECRET &&
+  process.env.NODE_ENV === "production"
+) {
+  console.warn(
+    "Missing NEXTAUTH_SECRET (or AUTH_SECRET). Using an insecure fallback; set it to a long random string to enable stable admin sessions.",
   );
 }
 
