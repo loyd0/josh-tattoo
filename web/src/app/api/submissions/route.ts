@@ -158,8 +158,6 @@ async function maybeSendNotificationEmail(opts: {
   const result = await resend.emails.send({
     to: opts.to,
     from: opts.from,
-    // Let Josh reply directly to the submitter.
-    replyTo: opts.email,
     subject,
     text,
     html,
