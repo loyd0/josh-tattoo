@@ -14,11 +14,13 @@ export function JoshPhoto() {
     if (!img) return;
 
     if (img.complete) {
-      if (img.naturalWidth > 0) {
-        setImageLoaded(true);
-      } else {
-        setHasError(true);
-      }
+      queueMicrotask(() => {
+        if (img.naturalWidth > 0) {
+          setImageLoaded(true);
+        } else {
+          setHasError(true);
+        }
+      });
     }
   }, []);
 
@@ -40,7 +42,6 @@ export function JoshPhoto() {
                 media="(min-width: 768px)"
                 srcSet="/josh-tattoo-desktop.png"
               />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 ref={imgRef}
                 src="/josh-tattoo-mobile.png"

@@ -1,7 +1,7 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Turnstile } from "next-turnstile";
 
@@ -28,7 +28,10 @@ export function SubmitForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const startedAtMs = useMemo(() => Date.now(), []);
+  const startedAtMsRef = useRef<number | null>(null);
+  useEffect(() => {
+    startedAtMsRef.current = Date.now();
+  }, []);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -145,7 +148,7 @@ export function SubmitForm() {
             size: file.size,
           },
           honeypot,
-          startedAtMs,
+          startedAtMs: startedAtMsRef.current ?? Date.now(),
           turnstileToken: tokenToUse,
         }),
       });

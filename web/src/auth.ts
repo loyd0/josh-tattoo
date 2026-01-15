@@ -3,6 +3,10 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 export type AdminRole = "full" | "limited";
 
+function isAdminRole(role: unknown): role is AdminRole {
+  return role === "full" || role === "limited";
+}
+
 /**
  * NextAuth uses this secret to encrypt/decrypt the JWT session cookie.
  *
@@ -88,14 +92,15 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      if (user && typeof (user as any).role === "string") {
-        token.role = (user as any).role;
+      const role = (user as { role?: unknown } | null | undefined)?.role;
+      if (isAdminRole(role)) {
+        token.role = role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).role = (token as any).role ?? "full";
+        session.user.role = token.role ?? "full";
       }
       return session;
     },
