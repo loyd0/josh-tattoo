@@ -1,6 +1,10 @@
 import { Resend } from "resend";
 
 import { getSql } from "@/lib/db";
+import {
+  assertProductionResendBaseUrl,
+  normalizeResendApiKey,
+} from "@/lib/resendConfig";
 import { enforceRateLimit } from "@/lib/rateLimit";
 import { getClientIpFromHeaders, hashIp } from "@/lib/ip";
 import { SubmissionRequestSchema } from "@/lib/validation";
@@ -53,8 +57,10 @@ async function maybeSendNotificationEmail(opts: {
   fileUrl: string;
   adminLink?: string;
 }) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = normalizeResendApiKey(process.env.RESEND_API_KEY);
   if (!apiKey) return;
+
+  assertProductionResendBaseUrl();
 
   if (!isValidResendFrom(opts.from)) {
     throw new Error(
