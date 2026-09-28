@@ -1,11 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
 import { getSql } from "@/lib/db";
 import { authOptions } from "@/auth";
 import { AdminRatingStars } from "@/components/AdminRatingStars";
+import { DesignLightbox } from "@/components/DesignLightbox";
 
 export const dynamic = "force-dynamic";
 
@@ -413,42 +413,18 @@ export default async function AdminPage({
                   className="border-t border-black/5 hover:bg-zinc-50/70"
                 >
                   <td className="px-4 py-3">
-                    {r.file_content_type.startsWith("image/") ? (
-                      <a
-                        href={r.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block h-12 w-12 overflow-hidden rounded-lg border border-zinc-200"
-                      >
-                        <Image
-                          src={r.file_url}
-                          alt={
-                            !isLimited && "name" in r
-                              ? `${r.name}'s tattoo`
-                              : "Tattoo submission"
-                          }
-                          width={48}
-                          height={48}
-                          className="h-full w-full object-cover"
-                        />
-                      </a>
-                    ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50">
-                        <svg
-                          className="h-6 w-6 text-zinc-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                    )}
+                    <DesignLightbox
+                      src={r.file_url}
+                      alt={
+                        !isLimited && "name" in r
+                          ? `${r.name}'s tattoo`
+                          : "Tattoo submission"
+                      }
+                      contentType={r.file_content_type}
+                      frameClassName="h-24 w-16"
+                      sizes="64px"
+                      badge={false}
+                    />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-zinc-700">
                     {new Date(r.created_at).toLocaleString("en-US", {
@@ -493,14 +469,17 @@ export default async function AdminPage({
                     <AdminRatingStars submissionId={r.id} initialRating={r.rating} />
                   </td>
                   <td className="px-4 py-3">
-                    <a
-                      href={r.file_url}
-                      className="text-zinc-900 underline underline-offset-4"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open
-                    </a>
+                    <DesignLightbox
+                      src={r.file_url}
+                      alt={
+                        !isLimited && "name" in r
+                          ? `${r.name}'s tattoo`
+                          : "Tattoo submission"
+                      }
+                      contentType={r.file_content_type}
+                      appearance="text"
+                      label="View larger"
+                    />
                     {isLimited ? (
                       <div className="mt-1">
                         <Link
