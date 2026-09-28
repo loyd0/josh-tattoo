@@ -26,8 +26,8 @@ export default async function AdminVotePage() {
   const voters = !isLimited && poll ? await listAdminVotes(poll.id) : null;
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-10">
-      <div className="mb-6 flex items-end justify-between gap-4">
+    <main className="mx-auto w-full min-w-0 max-w-7xl overflow-x-clip px-4 py-6 sm:py-10">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Voting</h1>
           <p className="mt-1 text-sm text-zinc-600">

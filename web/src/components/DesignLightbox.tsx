@@ -167,6 +167,13 @@ export function DesignLightbox({
 
   const fitted = !frameClassName;
 
+  function rememberRatio(event: React.SyntheticEvent<HTMLImageElement>) {
+    const image = event.currentTarget;
+    if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+      setRatio(image.naturalWidth / image.naturalHeight);
+    }
+  }
+
   return (
     <>
       <button
@@ -174,29 +181,27 @@ export function DesignLightbox({
         onPointerDown={stopBubble}
         onClick={openViewer}
         aria-label={`View larger: ${alt}`}
-        className={`relative block cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f0e6] ${
-          fitted ? "flex w-full items-center justify-center" : frameClassName
+        className={`relative block min-w-0 max-w-full cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f0e6] ${
+          fitted ? "w-full" : frameClassName
         }`}
+        style={
+          fitted
+            ? {
+                aspectRatio: ratio ?? 4 / 3,
+                maxHeight: "min(50svh, 32rem)",
+              }
+            : undefined
+        }
       >
-        {isImage && fitted ? (
+        {isImage ? (
           <Image
             src={src}
             alt=""
-            width={1200}
-            height={ratio ? Math.max(1, Math.round(1200 / ratio)) : 1500}
+            fill
             sizes={sizes}
-            onLoad={(event) => {
-              const image = event.currentTarget;
-              if (image.naturalWidth > 0 && image.naturalHeight > 0) {
-                setRatio(image.naturalWidth / image.naturalHeight);
-              }
-            }}
-            className="h-auto max-h-[50svh] w-auto max-w-full object-contain sm:max-h-[32rem]"
+            onLoad={rememberRatio}
+            className="object-contain"
           />
-        ) : isImage ? (
-          <span className="absolute inset-1.5 sm:inset-[6%]">
-            <Image src={src} alt="" fill className="object-contain" sizes={sizes} />
-          </span>
         ) : (
           <span className="flex h-full min-h-24 items-center justify-center px-3 text-center text-base underline">
             View this design

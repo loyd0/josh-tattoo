@@ -130,14 +130,14 @@ export function VoteBoard({
         <p className="mt-8 text-xl">Nothing is on the ballot yet.</p>
       ) : (
         <form onSubmit={onSubmit} className="mt-8">
-          <fieldset className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          <fieldset className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             <legend className="sr-only">Designs</legend>
             {entries.map((entry) => {
               const selected = choice === entry.id;
               return (
                 <label
                   key={entry.id}
-                  className={`block cursor-pointer rounded-2xl border-2 bg-white p-3 shadow-sm ${
+                  className={`block min-w-0 cursor-pointer overflow-hidden rounded-2xl border-2 bg-white p-3 shadow-sm ${
                     selected ? "border-[#1a1a1a] ring-4 ring-[#fff176]" : "border-black/10"
                   }`}
                 >

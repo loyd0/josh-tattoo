@@ -28,11 +28,11 @@ export function PublicResults({ entries }: { entries: ResultCard[] }) {
       <p className="mt-3 max-w-2xl text-lg text-[#333] sm:mt-4 sm:text-xl" style={{ fontFamily: "Patrick Hand, cursive" }}>
         Voting is closed. These are the counted votes.
       </p>
-      <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+      <div className="mt-6 grid w-full min-w-0 grid-cols-1 gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {entries.map((entry) => (
           <article
             key={entry.id}
-            className={`rounded-2xl border-2 bg-white p-3 shadow-sm ${
+            className={`min-w-0 overflow-hidden rounded-2xl border-2 bg-white p-3 shadow-sm ${
               entry.winner ? "border-[#1a1a1a] ring-4 ring-[#fff176]" : "border-black/10"
             }`}
           >

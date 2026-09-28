@@ -159,11 +159,11 @@ export function AdminBallot({
           placeholder={isLimited ? "Search explanations" : "Search name or explanation"}
           className="mb-3 w-full max-w-md rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((row) => (
             <label
               key={row.id}
-              className={`block rounded-xl border p-3 ${row.selected ? "border-zinc-900 bg-amber-50" : "border-zinc-200 bg-white"}`}
+              className={`block min-w-0 overflow-hidden rounded-xl border p-3 ${row.selected ? "border-zinc-900 bg-amber-50" : "border-zinc-200 bg-white"}`}
             >
               <div className="flex items-start gap-3">
                 <input
@@ -178,7 +178,7 @@ export function AdminBallot({
                       src={row.fileUrl}
                       alt={row.explanation?.slice(0, 80) || "Tattoo design"}
                       contentType={row.contentType}
-                      sizes="240px"
+                      sizes="(min-width: 1024px) 30vw, 100vw"
                     />
                   </div>
                   {row.name ? <div className="text-sm font-medium">{row.name}</div> : null}
