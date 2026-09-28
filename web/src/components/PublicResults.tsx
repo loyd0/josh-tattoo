@@ -1,5 +1,4 @@
-import Image from "next/image";
-
+import { DesignLightbox } from "@/components/DesignLightbox";
 import { SiteMark } from "@/components/SiteMark";
 import type { RankedResult } from "@/lib/voting/results";
 
@@ -37,26 +36,11 @@ export function PublicResults({ entries }: { entries: ResultCard[] }) {
               entry.winner ? "border-[#1a1a1a] ring-4 ring-[#fff176]" : "border-black/10"
             }`}
           >
-            <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f5f0e6]">
-              {entry.contentType.startsWith("image/") ? (
-                <Image
-                  src={entry.fileUrl}
-                  alt={entry.explanation?.slice(0, 80) || "Tattoo design"}
-                  fill
-                  className="object-contain"
-                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
-                />
-              ) : (
-                <a
-                  href={entry.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex h-full items-center justify-center px-4 text-center text-lg underline"
-                >
-                  Open this design
-                </a>
-              )}
-            </div>
+            <DesignLightbox
+              src={entry.fileUrl}
+              alt={entry.explanation?.slice(0, 80) || "Tattoo design"}
+              contentType={entry.contentType}
+            />
             <p className="mt-3 text-2xl font-black" style={{ fontFamily: "Londrina Solid, cursive" }}>
               {entry.votes} {entry.votes === 1 ? "vote" : "votes"}
               {entry.winner ? " · Winner" : ""}
