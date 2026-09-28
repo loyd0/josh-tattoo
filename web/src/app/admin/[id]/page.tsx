@@ -235,9 +235,7 @@ export default async function AdminSubmissionDetailPage(props: {
                 contentType={s.file_content_type}
                 sizes="(max-width: 768px) 100vw, 768px"
                 frameClassName={
-                  s.file_content_type.startsWith("image/")
-                    ? "aspect-[3/4] w-full"
-                    : "h-40 w-full"
+                  s.file_content_type.startsWith("image/") ? undefined : "h-40 w-full"
                 }
               />
             </div>

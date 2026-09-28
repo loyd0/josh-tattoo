@@ -101,19 +101,19 @@ export function VoteBoard({
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+    <main className="mx-auto w-full max-w-6xl px-3 py-5 pb-28 sm:px-4 sm:py-8 sm:pb-8 md:px-8">
       <header className="mb-6">
         <SiteMark />
       </header>
 
       <h1
-        className="text-4xl font-black leading-none md:text-6xl"
+        className="text-3xl font-black leading-none sm:text-4xl md:text-6xl"
         style={{ fontFamily: "Londrina Solid, cursive" }}
       >
         <span className="highlight-yellow">Pick a favourite.</span>
       </h1>
       <p
-        className="mt-4 max-w-2xl text-xl text-[#333]"
+        className="mt-3 max-w-2xl text-lg text-[#333] sm:mt-4 sm:text-xl"
         style={{ fontFamily: "Patrick Hand, cursive" }}
       >
         One vote. Your choice locks when you submit, and it only counts after you
@@ -130,7 +130,7 @@ export function VoteBoard({
         <p className="mt-8 text-xl">Nothing is on the ballot yet.</p>
       ) : (
         <form onSubmit={onSubmit} className="mt-8">
-          <fieldset className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <fieldset className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             <legend className="sr-only">Designs</legend>
             {entries.map((entry) => {
               const selected = choice === entry.id;
@@ -156,7 +156,7 @@ export function VoteBoard({
                     alt={entry.explanation?.slice(0, 80) || "Tattoo design"}
                     contentType={entry.contentType}
                   />
-                  <p className="mt-3 whitespace-pre-wrap text-lg leading-snug text-[#333]">
+                  <p className="mt-3 whitespace-pre-wrap text-base leading-snug text-[#333] sm:text-lg">
                     {entry.explanation?.trim() || "No explanation."}
                   </p>
                 </label>
@@ -169,7 +169,10 @@ export function VoteBoard({
               {done}
             </p>
           ) : (
-            <div className="mt-8 max-w-md space-y-4 rounded-2xl border-2 border-[#1a1a1a] bg-white p-5">
+            <div
+              id="vote-details"
+              className="mt-6 max-w-md scroll-mt-6 space-y-4 rounded-2xl border-2 border-[#1a1a1a] bg-white p-4 sm:mt-8 sm:p-5"
+            >
               <label className="block text-lg">
                 Your name
                 <input
@@ -223,7 +226,7 @@ export function VoteBoard({
               <button
                 type="submit"
                 disabled={preview || submitting || entries.length === 0}
-                className="rounded-xl border-2 border-[#1a1a1a] bg-[#fff176] px-5 py-3 text-xl font-semibold disabled:opacity-50"
+                className="min-h-12 w-full rounded-xl border-2 border-[#1a1a1a] bg-[#fff176] px-5 py-3 text-xl font-semibold disabled:opacity-50 sm:w-auto"
               >
                 {preview ? "Preview only" : submitting ? "Sending…" : "Lock in my vote"}
               </button>
@@ -231,6 +234,13 @@ export function VoteBoard({
           )}
         </form>
       )}
+      {entries.length > 0 && !done && !preview ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-[#1a1a1a] bg-[#fff176] px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+          <a href="#vote-details" className="block min-h-11 text-center text-lg font-semibold leading-[2.75rem]">
+            Lock in this design
+          </a>
+        </div>
+      ) : null}
     </main>
   );
 }

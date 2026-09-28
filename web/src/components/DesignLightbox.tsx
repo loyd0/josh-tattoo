@@ -19,36 +19,72 @@ export function DesignLightbox({
   src,
   alt,
   contentType,
-  frameClassName = "aspect-[3/4] w-full",
+  frameClassName,
   sizes = "(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw",
   appearance = "frame",
   label = "View",
   badge = true,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
+  const [ratio, setRatio] = useState<number | null>(null);
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const isImage = contentType.startsWith("image/");
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+    const scrollY = window.scrollY;
+    const { style } = document.body;
+    const previous = {
+      position: style.position,
+      top: style.top,
+      left: style.left,
+      right: style.right,
+      width: style.width,
+      overflow: style.overflow,
     };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
+    style.position = "fixed";
+    style.top = `-${scrollY}px`;
+    style.left = "0";
+    style.right = "0";
+    style.width = "100%";
+    style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setZoomed(false);
+        setOpen(false);
+      }
+    };
     window.addEventListener("keydown", onKey);
+    closeRef.current?.focus();
     return () => {
-      document.body.style.overflow = previousOverflow;
+      style.position = previous.position;
+      style.top = previous.top;
+      style.left = previous.left;
+      style.right = previous.right;
+      style.width = previous.width;
+      style.overflow = previous.overflow;
       window.removeEventListener("keydown", onKey);
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
+
+  function stopBubble(event: React.SyntheticEvent) {
+    event.stopPropagation();
+  }
 
   function openViewer(event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
+    setZoomed(false);
     setOpen(true);
+  }
+
+  function closeViewer(event?: React.SyntheticEvent) {
+    event?.stopPropagation();
+    setZoomed(false);
+    setOpen(false);
   }
 
   const dialog =
@@ -58,29 +94,42 @@ export function DesignLightbox({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-[#1a1a1a]/85 p-3 sm:p-8"
-            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[80] flex flex-col bg-[#1a1a1a]/92 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]"
+            onClick={() => closeViewer()}
           >
             <h2 id={titleId} className="sr-only">
               {alt}
             </h2>
-            <button
-              ref={closeRef}
-              type="button"
-              className="absolute right-3 top-3 z-[81] rounded-full border-2 border-[#1a1a1a] bg-[#fff176] px-4 py-2 text-base font-semibold text-[#1a1a1a] sm:right-6 sm:top-6"
-              onClick={(event) => {
-                event.stopPropagation();
-                setOpen(false);
-              }}
-            >
-              Close
-            </button>
+            <div className="flex shrink-0 items-center justify-between gap-3 px-3 py-2">
+              {isImage ? (
+                <button
+                  type="button"
+                  className="min-h-11 rounded-full border-2 border-[#1a1a1a] bg-white px-4 text-base font-semibold text-[#1a1a1a]"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setZoomed((current) => !current);
+                  }}
+                >
+                  {zoomed ? "Fit" : "Zoom"}
+                </button>
+              ) : (
+                <span />
+              )}
+              <button
+                ref={closeRef}
+                type="button"
+                className="min-h-11 rounded-full border-2 border-[#1a1a1a] bg-[#fff176] px-4 text-base font-semibold text-[#1a1a1a]"
+                onClick={closeViewer}
+              >
+                Close
+              </button>
+            </div>
             <div
-              className="relative h-[calc(100dvh-5.5rem)] w-full max-w-5xl overflow-hidden rounded-xl bg-[#f5f0e6]"
+              className="relative mx-2 mb-2 min-h-0 flex-1 overflow-auto rounded-xl bg-[#f5f0e6] sm:mx-auto sm:mb-4 sm:w-full sm:max-w-5xl"
               onClick={(event) => event.stopPropagation()}
             >
-              {isImage ? (
-                <span className="absolute inset-[4%] sm:inset-[6%]">
+              <div className={zoomed ? "relative h-[200%] w-[200%]" : "relative h-full w-full"}>
+                {isImage ? (
                   <Image
                     src={src}
                     alt={alt}
@@ -90,10 +139,10 @@ export function DesignLightbox({
                     className="object-contain"
                     sizes="100vw"
                   />
-                </span>
-              ) : (
-                <iframe title={alt} src={src} className="h-full w-full bg-white" />
-              )}
+                ) : (
+                  <iframe title={alt} src={src} className="absolute inset-0 h-full w-full bg-white" />
+                )}
+              </div>
             </div>
           </div>,
           document.body,
@@ -105,9 +154,9 @@ export function DesignLightbox({
       <>
         <button
           type="button"
-          onMouseDown={(event) => event.stopPropagation()}
+          onPointerDown={stopBubble}
           onClick={openViewer}
-          className="text-zinc-900 underline underline-offset-4"
+          className="min-h-11 text-zinc-900 underline underline-offset-4"
         >
           {label}
         </button>
@@ -116,17 +165,36 @@ export function DesignLightbox({
     );
   }
 
+  const fitted = !frameClassName;
+
   return (
     <>
       <button
         type="button"
-        onMouseDown={(event) => event.stopPropagation()}
+        onPointerDown={stopBubble}
         onClick={openViewer}
         aria-label={`View larger: ${alt}`}
-        className={`relative block cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f0e6] ${frameClassName}`}
+        className={`relative block cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f0e6] ${
+          fitted ? "flex w-full items-center justify-center" : frameClassName
+        }`}
       >
-        {isImage ? (
-          <span className="absolute inset-[6%]">
+        {isImage && fitted ? (
+          <Image
+            src={src}
+            alt=""
+            width={1200}
+            height={ratio ? Math.max(1, Math.round(1200 / ratio)) : 1500}
+            sizes={sizes}
+            onLoad={(event) => {
+              const image = event.currentTarget;
+              if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+                setRatio(image.naturalWidth / image.naturalHeight);
+              }
+            }}
+            className="h-auto max-h-[50svh] w-auto max-w-full object-contain sm:max-h-[32rem]"
+          />
+        ) : isImage ? (
+          <span className="absolute inset-1.5 sm:inset-[6%]">
             <Image src={src} alt="" fill className="object-contain" sizes={sizes} />
           </span>
         ) : (
@@ -135,7 +203,7 @@ export function DesignLightbox({
           </span>
         )}
         {badge ? (
-          <span className="pointer-events-none absolute bottom-1.5 right-1.5 rounded bg-[#1a1a1a]/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+          <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-[#1a1a1a]/80 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-white">
             Expand
           </span>
         ) : null}

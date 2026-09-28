@@ -13,22 +13,22 @@ type ResultCard = RankedResult<{
 export function PublicResults({ entries }: { entries: ResultCard[] }) {
   const winners = entries.filter((entry) => entry.winner);
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+    <main className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 sm:py-8 md:px-8">
       <header className="mb-6">
         <SiteMark />
       </header>
       <h1
-        className="text-4xl font-black leading-none md:text-6xl"
+        className="text-3xl font-black leading-none sm:text-4xl md:text-6xl"
         style={{ fontFamily: "Londrina Solid, cursive" }}
       >
         <span className="highlight-yellow">
           {winners.length > 1 ? "It's a tie." : winners.length === 1 ? "We have a winner." : "No votes were counted."}
         </span>
       </h1>
-      <p className="mt-4 max-w-2xl text-xl text-[#333]" style={{ fontFamily: "Patrick Hand, cursive" }}>
+      <p className="mt-3 max-w-2xl text-lg text-[#333] sm:mt-4 sm:text-xl" style={{ fontFamily: "Patrick Hand, cursive" }}>
         Voting is closed. These are the counted votes.
       </p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {entries.map((entry) => (
           <article
             key={entry.id}
