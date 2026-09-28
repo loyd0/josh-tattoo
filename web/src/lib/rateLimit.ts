@@ -7,7 +7,7 @@ function getBucketStartEpochSeconds(nowSeconds: number, windowSeconds: number) {
 }
 
 export async function enforceRateLimit(opts: {
-  scope: "blob_token" | "submission";
+  scope: "blob_token" | "submission" | "vote";
   ipHash: string;
   windowSeconds: number;
   max: number;

@@ -1,7 +1,31 @@
 import { SubmitForm } from "@/components/SubmitForm";
 import { JoshPhoto } from "@/components/JoshPhoto";
+import { PublicResults } from "@/components/PublicResults";
+import { PublicVote } from "@/components/PublicVote";
+import { rankResults } from "@/lib/voting/results";
+import { listBallot, listResults, loadPollPhase } from "@/lib/voting/store";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const { poll, phase } = await loadPollPhase();
+  if (phase === "voting" && poll) {
+    const entries = await listBallot(poll.id);
+    return (
+      <PublicVote
+        entries={entries}
+        endsAt={poll.endsAt ? poll.endsAt.toISOString() : null}
+      />
+    );
+  }
+  if (phase === "results" && poll) {
+    const entries = rankResults(await listResults(poll.id));
+    return <PublicResults entries={entries} />;
+  }
+  return <SubmitHome />;
+}
+
+function SubmitHome() {
   return (
     <main className="relative min-h-dvh overflow-x-hidden">
       {/* Header - Centered on mobile, spaced on desktop */}
