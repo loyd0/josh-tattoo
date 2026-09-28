@@ -318,6 +318,12 @@ export default async function AdminPage({
         </div>
         <div className="flex items-center gap-4">
           <Link
+            href="/admin/vote"
+            className="rounded-xl border-2 border-[#1a1a1a] bg-white px-4 py-2 text-base font-semibold text-[#1a1a1a] hover:bg-[#fff176]"
+          >
+            Voting
+          </Link>
+          <Link
             href="/"
             className="rounded-xl border-2 border-[#1a1a1a] bg-white px-4 py-2 text-base font-semibold text-[#1a1a1a] hover:bg-[#fff176]"
           >

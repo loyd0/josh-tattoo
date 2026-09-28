@@ -40,6 +40,15 @@ Optional:
 - `RATE_LIMIT_WINDOW_SECONDS` (default: 600)
 - `RATE_LIMIT_MAX_TOKENS` (default: 10)
 - `RATE_LIMIT_MAX_SUBMISSIONS` (default: 5)
+- `RATE_LIMIT_MAX_VOTES` (default: 8)
+
+## Voting
+
+Run `migrations/005_create_voting.sql` before opening a ballot.
+
+Admins choose the shortlist and the UK start/end at `/admin/vote`. The limited admin can change the shortlist and open the preview, and cannot see totals or voter details. Before the start, the homepage still takes submissions. During the window it becomes the ballot and submissions close. After the end it shows the winner (or every tie) and each design's count, and submissions stay closed.
+
+A vote stores a hashed IP, a device cookie, a hashed browser fingerprint, and the user agent. Plus-tags are removed, Gmail and Googlemail are one inbox, and dotted addresses stay distinct. Disposable inboxes are rejected. The same email, cookie, IP, or fingerprint cannot vote again, including after a void.
 
 ## Database migrations (Neon)
 
@@ -48,6 +57,8 @@ Run these SQL files against your Neon database:
 - `migrations/001_create_submissions.sql`
 - `migrations/002_create_rate_limits.sql`
 - `migrations/003_add_email.sql`
+- `migrations/004_add_explanation_and_rating.sql`
+- `migrations/005_create_voting.sql`
 
 ## Vercel deployment notes
 

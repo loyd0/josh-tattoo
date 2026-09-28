@@ -4,6 +4,7 @@ import { getSql } from "@/lib/db";
 import { enforceRateLimit } from "@/lib/rateLimit";
 import { getClientIpFromHeaders, hashIp } from "@/lib/ip";
 import { SubmissionRequestSchema } from "@/lib/validation";
+import { loadPollPhase } from "@/lib/voting/store";
 
 export const runtime = "nodejs";
 
@@ -177,6 +178,16 @@ export async function POST(request: Request) {
   }
 
   const data = parsed.data;
+
+  const { phase } = await loadPollPhase();
+  if (phase !== "submissions") {
+    return jsonError(
+      403,
+      phase === "voting"
+        ? "Submissions are closed while voting is open."
+        : "Submissions are closed.",
+    );
+  }
 
   // Spam hardening
   if (data.honeypot && data.honeypot.trim().length > 0) {
