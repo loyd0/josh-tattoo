@@ -1,11 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
 import { getSql } from "@/lib/db";
 import { AdminNotesModal } from "@/components/AdminNotesModal";
 import { AdminRatingStars } from "@/components/AdminRatingStars";
+import { DesignLightbox } from "@/components/DesignLightbox";
 import { authOptions } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -224,42 +224,26 @@ export default async function AdminSubmissionDetailPage(props: {
         <div className="mt-6 space-y-2">
           <AdminNotesModal submissionId={s.id} initialNotes={s.notes} />
 
-          {s.file_content_type.startsWith("image/") ? (
-            <div className="pt-2">
-              <div className="text-xs uppercase tracking-wide text-zinc-500">
-                Upload preview
-              </div>
-              <a
-                href={s.file_url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 block overflow-hidden rounded-2xl border border-black/10 bg-zinc-50"
-                title="Open full image in new tab"
-              >
-                <Image
-                  src={s.file_url}
-                  alt="Uploaded tattoo"
-                  width={1600}
-                  height={1600}
-                  sizes="(max-width: 768px) 100vw, 768px"
-                  className="h-auto w-full"
-                />
-              </a>
-              <div className="mt-2 text-sm text-zinc-600">
-                Click the image to open full size.
-              </div>
-            </div>
-          ) : null}
-
           <div className="pt-2">
-            <a
-              href={s.file_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white"
-            >
-              Open uploaded file
-            </a>
+            <div className="text-xs uppercase tracking-wide text-zinc-500">
+              Upload preview
+            </div>
+            <div className="mt-2">
+              <DesignLightbox
+                src={s.file_url}
+                alt="Uploaded tattoo"
+                contentType={s.file_content_type}
+                sizes="(max-width: 768px) 100vw, 768px"
+                frameClassName={
+                  s.file_content_type.startsWith("image/")
+                    ? "aspect-[3/4] w-full"
+                    : "h-40 w-full"
+                }
+              />
+            </div>
+            <div className="mt-2 text-sm text-zinc-600">
+              Click the image to view it full size.
+            </div>
           </div>
         </div>
       </div>

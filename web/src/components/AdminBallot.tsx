@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
+
+import { DesignLightbox } from "@/components/DesignLightbox";
 
 type Candidate = {
   id: string;
@@ -172,20 +173,13 @@ export function AdminBallot({
                   className="mt-1"
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="relative mb-2 h-24 w-full overflow-hidden rounded-lg bg-zinc-100">
-                    {row.contentType.startsWith("image/") ? (
-                      <Image
-                        src={row.fileUrl}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="240px"
-                      />
-                    ) : (
-                      <span className="flex h-full items-center justify-center text-xs text-zinc-500">
-                        File
-                      </span>
-                    )}
+                  <div className="mb-2">
+                    <DesignLightbox
+                      src={row.fileUrl}
+                      alt={row.explanation?.slice(0, 80) || "Tattoo design"}
+                      contentType={row.contentType}
+                      sizes="240px"
+                    />
                   </div>
                   {row.name ? <div className="text-sm font-medium">{row.name}</div> : null}
                   <p className="line-clamp-3 text-sm text-zinc-700">

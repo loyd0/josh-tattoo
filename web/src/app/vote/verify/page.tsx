@@ -1,6 +1,5 @@
-import Image from "next/image";
-
 import { ConfirmVoteButton, ResendVoteForm } from "@/components/ConfirmVote";
+import { DesignLightbox } from "@/components/DesignLightbox";
 import { SiteMark } from "@/components/SiteMark";
 import { hasEnded } from "@/lib/voting/phase";
 import { findVoteByTokenHash } from "@/lib/voting/store";
@@ -50,21 +49,12 @@ export default async function VerifyVotePage({
             You cannot change it.
           </p>
           <article className="mt-6 rounded-2xl border-2 border-[#1a1a1a] bg-white p-3">
-            <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f5f0e6]">
-              {vote.contentType.startsWith("image/") ? (
-                <Image
-                  src={vote.fileUrl}
-                  alt={vote.explanation?.slice(0, 80) || "Tattoo design"}
-                  fill
-                  className="object-contain"
-                  sizes="480px"
-                />
-              ) : (
-                <a href={vote.fileUrl} className="flex h-full items-center justify-center underline">
-                  Open this design
-                </a>
-              )}
-            </div>
+            <DesignLightbox
+              src={vote.fileUrl}
+              alt={vote.explanation?.slice(0, 80) || "Tattoo design"}
+              contentType={vote.contentType}
+              sizes="480px"
+            />
             <p className="mt-3 whitespace-pre-wrap text-lg">
               {vote.explanation?.trim() || "No explanation."}
             </p>
