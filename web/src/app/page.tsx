@@ -1,3 +1,4 @@
+import { SiteMark } from "@/components/SiteMark";
 import { SubmitForm } from "@/components/SubmitForm";
 import { JoshPhoto } from "@/components/JoshPhoto";
 import { PublicResults } from "@/components/PublicResults";
@@ -22,6 +23,7 @@ export default async function Home() {
     const entries = rankResults(await listResults(poll.id));
     return <PublicResults entries={entries} />;
   }
+  if (phase === "closed") return <SubmissionsClosed />;
   return <SubmitHome />;
 }
 
@@ -116,6 +118,22 @@ function SubmitHome() {
 
       {/* Ideas section anchor */}
       <div id="ideas" className="h-16 md:h-32" />
+    </main>
+  );
+}
+
+function SubmissionsClosed() {
+  return (
+    <main className="mx-auto min-h-dvh max-w-6xl px-4 py-6 md:px-8 md:py-10">
+      <header><SiteMark /></header>
+      <section className="mx-auto mt-16 max-w-xl rounded-2xl border-2 border-[#1a1a1a] bg-white p-6 shadow-lg md:mt-24 md:p-10">
+        <h1 className="text-4xl font-black leading-tight md:text-5xl" style={{ fontFamily: "Londrina Solid, cursive" }}>
+          <span className="highlight-yellow">Submissions are closed.</span>
+        </h1>
+        <p className="mt-5 text-xl leading-relaxed text-[#333]" style={{ fontFamily: "Patrick Hand, cursive" }}>
+          Thanks for all your ink genius! The designs are in and the shortlist is being prepared for the public vote. Check back soon to pick your favourite.
+        </p>
+      </section>
     </main>
   );
 }

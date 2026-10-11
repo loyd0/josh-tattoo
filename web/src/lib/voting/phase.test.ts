@@ -29,3 +29,13 @@ test("the window is half-open at the end", () => {
   assert.equal(pollPhase(new Date(end.getTime() - 1), start, end), "voting");
   assert.equal(pollPhase(end, start, end), "results");
 });
+
+
+test("closing submissions holds the ballot for review without opening voting", () => {
+  const closedAt = new Date("2026-09-30T12:00:00Z");
+  assert.equal(pollPhase(closedAt, null, null, closedAt), "closed");
+  assert.equal(pollPhase(closedAt, start, end, closedAt), "closed");
+  assert.equal(pollPhase(new Date(closedAt.getTime() - 1), start, end, closedAt), "submissions");
+  assert.equal(pollPhase(start, start, end, closedAt), "voting");
+  assert.equal(pollPhase(end, start, end, closedAt), "results");
+});

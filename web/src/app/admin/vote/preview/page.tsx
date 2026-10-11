@@ -17,7 +17,9 @@ export default async function VotePreviewPage() {
       ? "Admin preview. Totals stay on the full admin page."
       : phase === "results"
         ? "Admin preview of the ballot. The public homepage is showing the result."
-        : "Admin preview. The public homepage is still taking submissions.";
+        : phase === "closed"
+          ? "Admin preview. Submissions are closed. Voting has not opened yet."
+          : "Admin preview. The public homepage is still taking submissions.";
 
   return (
     <PublicVote

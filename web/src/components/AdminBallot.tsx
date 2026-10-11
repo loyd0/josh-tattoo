@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import type { PollPhase } from "@/lib/voting/phase";
 import { DesignLightbox } from "@/components/DesignLightbox";
 
 type Candidate = {
@@ -35,7 +36,7 @@ export function AdminBallot({
   candidates,
   voters,
 }: {
-  phase: "submissions" | "voting" | "results";
+  phase: PollPhase;
   isLimited: boolean;
   startsAtLocal: string;
   endsAtLocal: string;
@@ -108,7 +109,9 @@ export function AdminBallot({
       ? "Voting is open. The homepage is the ballot."
       : phase === "results"
         ? "Voting has ended. The homepage shows the result."
-        : "The public homepage is still taking submissions.";
+        : phase === "closed"
+          ? "Submissions are closed. Voting has not opened yet; the ballot is ready to preview."
+          : "The public homepage is still taking submissions.";
 
   return (
     <div className="space-y-8">
@@ -128,7 +131,7 @@ export function AdminBallot({
               required
               value={start}
               onChange={(event) => setStart(event.target.value)}
-              disabled={phase !== "submissions"}
+              disabled={phase === "voting" || phase === "results"}
               className="mt-1 block rounded-lg border border-zinc-300 px-3 py-2"
             />
           </label>

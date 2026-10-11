@@ -4,6 +4,7 @@ import { pollPhase, type PollPhase } from "@/lib/voting/phase";
 
 export type PollRecord = {
   id: string;
+  submissionsClosedAt: Date | null;
   startsAt: Date | null;
   endsAt: Date | null;
 };
@@ -50,11 +51,12 @@ function asStatus(value: unknown): VoteStatus {
   return "pending";
 }
 
-type PollRow = { id: string; starts_at: unknown; ends_at: unknown };
+type PollRow = { id: string; starts_at: unknown; ends_at: unknown; submissions_closed_at: unknown };
 
 function mapPoll(row: PollRow): PollRecord {
   return {
     id: row.id,
+    submissionsClosedAt: asDate(row.submissions_closed_at),
     startsAt: asDate(row.starts_at),
     endsAt: asDate(row.ends_at),
   };
@@ -64,7 +66,7 @@ export async function getPoll(): Promise<PollRecord | null> {
   if (!process.env.DATABASE_URL) return null;
   const sql = getSql();
   const rows = (await sql`
-    select id, starts_at, ends_at
+    select id, starts_at, ends_at, submissions_closed_at
     from polls
     order by created_at asc
     limit 1
@@ -79,7 +81,7 @@ export async function loadPollPhase(now = new Date()): Promise<{
 }> {
   const poll = await getPoll();
   if (!poll) return { poll: null, phase: "submissions" };
-  return { poll, phase: pollPhase(now, poll.startsAt, poll.endsAt) };
+  return { poll, phase: pollPhase(now, poll.startsAt, poll.endsAt, poll.submissionsClosedAt) };
 }
 
 export async function ensurePoll(): Promise<PollRecord> {
@@ -90,7 +92,7 @@ export async function ensurePoll(): Promise<PollRecord> {
     insert into polls (singleton)
     values (true)
     on conflict (singleton) do update set updated_at = polls.updated_at
-    returning id, starts_at, ends_at
+    returning id, starts_at, ends_at, submissions_closed_at
   `) as unknown as PollRow[];
   const row = rows[0];
   if (!row) throw new Error("Could not create the poll");

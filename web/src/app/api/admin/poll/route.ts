@@ -39,7 +39,7 @@ export async function PATCH(request: Request) {
   const { poll, phase } = await loadPollPhase();
   const current = poll ?? (await ensurePoll());
   if (
-    phase !== "submissions" &&
+    (phase === "voting" || phase === "results") &&
     current.startsAt &&
     formatLondonLocal(current.startsAt) !== parsed.data.startsAtLocal
   ) {

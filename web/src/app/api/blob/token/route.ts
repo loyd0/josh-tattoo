@@ -2,6 +2,7 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { validateTurnstileToken } from "next-turnstile";
 import { v4 as uuidv4 } from "uuid";
 
+import { loadPollPhase } from "@/lib/voting/store";
 import { enforceRateLimit } from "@/lib/rateLimit";
 import { getClientIpFromHeaders, hashIp } from "@/lib/ip";
 import { AllowedContentTypes, MAX_UPLOAD_BYTES } from "@/lib/validation";
@@ -19,6 +20,10 @@ export async function POST(request: Request) {
       body,
       request,
       onBeforeGenerateToken: async (_pathname, clientPayload) => {
+        const { phase } = await loadPollPhase();
+        if (phase !== "submissions") {
+          throw Object.assign(new Error("Submissions are closed."), { status: 403 });
+        }
         let turnstileToken: string | undefined;
         if (clientPayload) {
           try {

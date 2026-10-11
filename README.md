@@ -44,7 +44,9 @@ Optional:
 
 ## Voting
 
-Run `migrations/005_create_voting.sql` before opening a ballot.
+Run `migrations/005_create_voting.sql` and `migrations/006_close_submissions.sql` before opening a ballot.
+
+Set `polls.submissions_closed_at` to close submissions before the vote is scheduled. The public homepage then shows a closed notice, upload tokens and submissions are refused, and `/admin/vote/preview` remains available. Voting still requires a start and end; closing submissions alone does not open the ballot.
 
 Admins choose the shortlist and the UK start/end at `/admin/vote`. The limited admin can change the shortlist and open the preview, and cannot see totals or voter details. Before the start, the homepage still takes submissions. During the window it becomes the ballot and submissions close. After the end it shows the winner (or every tie) and each design's count, and submissions stay closed.
 
@@ -59,6 +61,7 @@ Run these SQL files against your Neon database:
 - `migrations/003_add_email.sql`
 - `migrations/004_add_explanation_and_rating.sql`
 - `migrations/005_create_voting.sql`
+- `migrations/006_close_submissions.sql`
 
 ## Vercel deployment notes
 
