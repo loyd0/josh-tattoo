@@ -7,6 +7,7 @@ import { Turnstile } from "next-turnstile";
 
 import { DesignLightbox } from "@/components/DesignLightbox";
 import { SiteMark } from "@/components/SiteMark";
+import { VoteCountdown } from "@/components/VoteCountdown";
 import { browserFingerprint } from "@/lib/voting/fingerprint";
 
 export type VoteCard = {
@@ -18,11 +19,15 @@ export type VoteCard = {
 
 export function VoteBoard({
   entries,
+  endsAt,
+  initialNow,
   endsLabel,
   preview,
   banner,
 }: {
   entries: VoteCard[];
+  endsAt: string | null;
+  initialNow: number;
   endsLabel: string | null;
   preview: boolean;
   banner?: string | null;
@@ -164,14 +169,17 @@ export function VoteBoard({
           Three designs. One very permanent decision. Choose your favourite,
           then confirm your vote by email.
         </p>
-        {endsLabel ? (
-          <p className="mt-3 text-base text-[#333] sm:text-lg">
-            Voting closes <strong>{endsLabel} UK time.</strong>
-          </p>
-        ) : null}
         <p className="mt-2 text-base text-[#333]">
           One vote each. Results stay hidden until voting ends.
         </p>
+        {endsAt && endsLabel ? (
+          <VoteCountdown
+            endsAt={endsAt}
+            initialNow={initialNow}
+            endsLabel={endsLabel}
+            preview={preview}
+          />
+        ) : null}
       </div>
       {banner ? (
         <p className="mb-6 rounded-xl border-2 border-[#1a1a1a] bg-[#fff176] px-4 py-3 text-lg">

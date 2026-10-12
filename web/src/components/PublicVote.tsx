@@ -20,9 +20,14 @@ export async function PublicVote({
   const seed = jar.get(DEVICE_COOKIE)?.value ?? "pending-device";
   const ordered = seededShuffle(entries, seed);
   const endsLabel = endsAt ? formatLondonLong(new Date(endsAt)) : null;
+  // Capture this request's time on the server so hydration starts at the same second.
+  // eslint-disable-next-line react-hooks/purity
+  const initialNow = Date.now();
   return (
     <VoteBoard
       entries={ordered}
+      endsAt={endsAt}
+      initialNow={initialNow}
       endsLabel={endsLabel}
       preview={preview}
       banner={banner}
