@@ -329,7 +329,7 @@ export function VoteBoard({
                   <Turnstile
                     key={turnstileVersion}
                     siteKey={siteKey}
-                    size="flexible"
+                    size="compact"
                     onVerify={(token) => {
                       setTurnstileToken(token);
                       setTurnstileStatus("success");

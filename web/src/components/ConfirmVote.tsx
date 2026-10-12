@@ -133,7 +133,7 @@ export function ResendVoteForm() {
         <Turnstile
           key={securityVersion}
           siteKey={siteKey}
-          size="flexible"
+          size="compact"
           onVerify={(value) => {
             setToken(value);
             setStatus("success");
