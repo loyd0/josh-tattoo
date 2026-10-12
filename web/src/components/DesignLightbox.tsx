@@ -30,6 +30,8 @@ export function DesignLightbox({
   const [ratio, setRatio] = useState<number | null>(null);
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const isImage = contentType.startsWith("image/");
 
   useEffect(() => {
@@ -55,6 +57,21 @@ export function DesignLightbox({
         setZoomed(false);
         setOpen(false);
       }
+      if (event.key === "Tab") {
+        const controls = dialogRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), iframe, a[href]",
+        );
+        const first = controls?.[0];
+        const last = controls?.[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        }
+        if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     closeRef.current?.focus();
@@ -66,6 +83,7 @@ export function DesignLightbox({
       style.width = previous.width;
       style.overflow = previous.overflow;
       window.removeEventListener("keydown", onKey);
+      triggerRef.current?.focus({ preventScroll: true });
       window.scrollTo(0, scrollY);
     };
   }, [open]);
@@ -74,7 +92,8 @@ export function DesignLightbox({
     event.stopPropagation();
   }
 
-  function openViewer(event: React.MouseEvent) {
+  function openViewer(event: React.MouseEvent<HTMLButtonElement>) {
+    triggerRef.current = event.currentTarget;
     event.preventDefault();
     event.stopPropagation();
     setZoomed(false);
@@ -91,6 +110,7 @@ export function DesignLightbox({
     open && typeof document !== "undefined"
       ? createPortal(
           <div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
@@ -104,7 +124,7 @@ export function DesignLightbox({
               {isImage ? (
                 <button
                   type="button"
-                  className="min-h-11 rounded-full border-2 border-[#1a1a1a] bg-white px-4 text-base font-semibold text-[#1a1a1a]"
+                  className="min-h-11 rounded-full border-2 border-[#1a1a1a] bg-white px-4 text-base font-semibold text-[#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3b4cca]"
                   onClick={(event) => {
                     event.stopPropagation();
                     setZoomed((current) => !current);
@@ -118,7 +138,7 @@ export function DesignLightbox({
               <button
                 ref={closeRef}
                 type="button"
-                className="min-h-11 rounded-full border-2 border-[#1a1a1a] bg-[#fff176] px-4 text-base font-semibold text-[#1a1a1a]"
+                className="min-h-11 rounded-full border-2 border-[#1a1a1a] bg-[#fff176] px-4 text-base font-semibold text-[#1a1a1a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3b4cca]"
                 onClick={closeViewer}
               >
                 Close
@@ -128,7 +148,13 @@ export function DesignLightbox({
               className="relative mx-2 mb-2 min-h-0 flex-1 overflow-auto rounded-xl bg-[#f5f0e6] sm:mx-auto sm:mb-4 sm:w-full sm:max-w-5xl"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className={zoomed ? "relative h-[200%] w-[200%]" : "relative h-full w-full"}>
+              <div
+                className={
+                  zoomed
+                    ? "relative h-[200%] w-[200%]"
+                    : "relative h-full w-full"
+                }
+              >
                 {isImage ? (
                   <Image
                     src={src}
@@ -140,7 +166,11 @@ export function DesignLightbox({
                     sizes="100vw"
                   />
                 ) : (
-                  <iframe title={alt} src={src} className="absolute inset-0 h-full w-full bg-white" />
+                  <iframe
+                    title={alt}
+                    src={src}
+                    className="absolute inset-0 h-full w-full bg-white"
+                  />
                 )}
               </div>
             </div>
@@ -181,7 +211,7 @@ export function DesignLightbox({
         onPointerDown={stopBubble}
         onClick={openViewer}
         aria-label={`View larger: ${alt}`}
-        className={`relative block min-w-0 max-w-full cursor-zoom-in overflow-hidden rounded-xl bg-[#f5f0e6] ${
+        className={`relative block min-w-0 max-w-full cursor-zoom-in overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#3b4cca] rounded-xl bg-[#f5f0e6] ${
           fitted ? "w-full" : frameClassName
         }`}
         style={
@@ -208,7 +238,7 @@ export function DesignLightbox({
           </span>
         )}
         {badge ? (
-          <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-[#1a1a1a]/80 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+          <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-[#1a1a1a]/80 px-2 py-1 text-sm font-semibold uppercase tracking-wide text-white">
             Expand
           </span>
         ) : null}

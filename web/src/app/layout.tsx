@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Ink My Canvas | Help Me Ruin My Body (Artistically)",
   description:
-    "Before I’m 30, I need to get a tattoo. I can’t decide what it should be, so I’m crowdsourcing anonymous design submissions, picking my top three, and (probably) putting it to a public vote.",
+    "Three designs. One very permanent decision. Vote for your favourite tattoo for Josh and confirm your choice by email.",
 };
 
 export default function RootLayout({

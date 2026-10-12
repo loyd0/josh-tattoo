@@ -4,24 +4,37 @@ import { useState } from "react";
 import { Turnstile } from "next-turnstile";
 
 export function ConfirmVoteButton({ token }: { token: string }) {
-  const [state, setState] = useState<"idle" | "working" | "counted" | "error">("idle");
+  const [state, setState] = useState<"idle" | "working" | "counted" | "error">(
+    "idle",
+  );
   const [message, setMessage] = useState<string | null>(null);
 
   async function confirm() {
     setState("working");
     setMessage(null);
-    const res = await fetch("/api/votes/confirm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-    const json = (await res.json().catch(() => null)) as { error?: string } | null;
-    if (!res.ok) {
+    try {
+      const res = await fetch("/api/votes/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const json = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        setState("error");
+        setMessage(
+          json?.error ?? "Could not count the vote. Please try again.",
+        );
+        return;
+      }
+      setState("counted");
+    } catch {
       setState("error");
-      setMessage(json?.error ?? "Could not count the vote.");
-      return;
+      setMessage(
+        "Check your connection and try again. Your choice is still saved.",
+      );
     }
-    setState("counted");
   }
 
   if (state === "counted") {
@@ -42,7 +55,11 @@ export function ConfirmVoteButton({ token }: { token: string }) {
       >
         {state === "working" ? "Counting…" : "Count my vote"}
       </button>
-      {message ? <p className="mt-3 text-lg text-red-700">{message}</p> : null}
+      {message ? (
+        <p role="alert" className="mt-3 text-lg text-red-700">
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -55,29 +72,40 @@ export function ResendVoteForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const [securityVersion, setSecurityVersion] = useState(0);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setWorking(true);
     setMessage(null);
-    const res = await fetch("/api/votes", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        honeypot,
-        turnstileToken: siteKey ? token : "dev-bypass",
-      }),
-    });
-    const json = (await res.json().catch(() => null)) as
-      | { message?: string; error?: string }
-      | null;
-    setWorking(false);
-    if (!res.ok) {
-      setMessage(json?.error ?? "Could not send the link.");
-      return;
+    try {
+      const res = await fetch("/api/votes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          honeypot,
+          turnstileToken: siteKey ? token : "dev-bypass",
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as {
+        message?: string;
+        error?: string;
+      } | null;
+      setMessage(
+        res.ok
+          ? (json?.message ??
+              "If that address still has a vote waiting, we sent another link.")
+          : (json?.error ?? "Could not send the link. Please try again."),
+      );
+    } catch {
+      setMessage("Check your connection and try again.");
+    } finally {
+      setWorking(false);
+      setToken("");
+      setStatus("required");
+      setSecurityVersion((current) => current + 1);
     }
-    setMessage(json?.message ?? "If that address still has a vote waiting, we sent another link.");
   }
 
   return (
@@ -103,10 +131,20 @@ export function ResendVoteForm() {
       </label>
       {siteKey ? (
         <Turnstile
+          key={securityVersion}
           siteKey={siteKey}
+          size="flexible"
           onVerify={(value) => {
             setToken(value);
             setStatus("success");
+          }}
+          onExpire={() => {
+            setToken("");
+            setStatus("required");
+          }}
+          onError={() => {
+            setToken("");
+            setStatus("required");
           }}
         />
       ) : null}
@@ -117,7 +155,11 @@ export function ResendVoteForm() {
       >
         {working ? "Sending…" : "Send the link again"}
       </button>
-      {message ? <p className="text-lg">{message}</p> : null}
+      {message ? (
+        <p role="status" className="text-lg">
+          {message}
+        </p>
+      ) : null}
     </form>
   );
 }
