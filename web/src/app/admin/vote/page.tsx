@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 
 import { AdminBallot } from "@/components/AdminBallot";
+import { AdminVoteTotal } from "@/components/AdminVoteTotal";
 import { authOptions } from "@/auth";
 import { formatLondonLocal } from "@/lib/voting/londonTime";
 import {
+  countConfirmedVotes,
   listAdminCandidates,
   listAdminVotes,
   loadPollPhase,
@@ -18,20 +20,26 @@ export default async function AdminVotePage() {
   if (!session) redirect("/admin/signin");
   const isLimited = (session.user?.role ?? "full") === "limited";
   const { poll, phase } = await loadPollPhase();
-  const candidates = await listAdminCandidates({
-    pollId: poll?.id ?? null,
-    includeNames: !isLimited,
-    includeCounts: !isLimited,
-  });
-  const voters = !isLimited && poll ? await listAdminVotes(poll.id) : null;
+  const [candidates, voters, total] = await Promise.all([
+    listAdminCandidates({
+      pollId: poll?.id ?? null,
+      includeNames: !isLimited,
+      includeCounts: !isLimited,
+    }),
+    !isLimited && poll ? listAdminVotes(poll.id) : null,
+    poll ? countConfirmedVotes(poll.id) : 0,
+  ]);
 
   return (
     <main className="mx-auto w-full min-w-0 max-w-7xl overflow-x-clip px-4 py-6 sm:py-10">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Voting</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+            Voting
+          </h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Choose the tattoos on the ballot. The public page changes on its own at the start and end.
+            Choose the tattoos on the ballot. The public page changes on its own
+            at the start and end.
           </p>
         </div>
         <div className="flex gap-3">
@@ -41,11 +49,15 @@ export default async function AdminVotePage() {
           >
             Preview
           </Link>
-          <Link href="/admin" className="rounded-xl border border-zinc-300 px-4 py-2 text-sm">
+          <Link
+            href="/admin"
+            className="rounded-xl border border-zinc-300 px-4 py-2 text-sm"
+          >
             Submissions
           </Link>
         </div>
       </div>
+      <AdminVoteTotal total={total} />
       <AdminBallot
         phase={phase}
         isLimited={isLimited}

@@ -169,6 +169,16 @@ export async function listResults(pollId: string): Promise<ResultEntry[]> {
   }));
 }
 
+export async function countConfirmedVotes(pollId: string): Promise<number> {
+  const sql = getSql();
+  const rows = (await sql`
+    select count(*) as total
+    from votes
+    where poll_id = ${pollId} and status = 'counted'
+  `) as unknown as Array<{ total: number | string }>;
+  return Number(rows[0]?.total) || 0;
+}
+
 export async function listVoteSignals(pollId: string): Promise<ExistingVote[]> {
   const sql = getSql();
   const rows = (await sql`

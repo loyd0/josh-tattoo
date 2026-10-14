@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import type { PollPhase } from "@/lib/voting/phase";
 import { DesignLightbox } from "@/components/DesignLightbox";
@@ -43,6 +44,7 @@ export function AdminBallot({
   candidates: Candidate[];
   voters: Voter[] | null;
 }) {
+  const router = useRouter();
   const [rows, setRows] = useState(candidates);
   const [start, setStart] = useState(startsAtLocal);
   const [end, setEnd] = useState(endsAtLocal);
@@ -102,6 +104,7 @@ export function AdminBallot({
     setVoteRows((current) =>
       current.map((vote) => (vote.id === id ? { ...vote, status: "void" } : vote)),
     );
+    router.refresh();
   }
 
   const phaseLabel =
@@ -120,7 +123,7 @@ export function AdminBallot({
 
       {isLimited ? (
         <p className="text-sm text-zinc-600">
-          You can choose designs and preview the ballot. Dates, totals, and voter details stay with the full admin.
+          You can view the total confirmed votes, choose designs and preview the ballot. Dates, design totals and voter details stay with the full admin.
         </p>
       ) : (
         <form onSubmit={saveDates} className="flex flex-wrap items-end gap-3">
